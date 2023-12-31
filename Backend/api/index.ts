@@ -6,9 +6,7 @@ import watchlistRouter from "./routes/watchlist.routes";
 import playlistsRouter from "./routes/playlists.routes";
 import moviesRouter from "./routes/movies.routes";
 import adminRouter from "./routes/admin.routes";
-export const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-export const passwordRegex =
-  /^(?=.*[A-Z])(?=.*[a-z])(?=.*[@#$%^&+=])(.{6,20})$/;
+
 const app = express();
 const port = 3000;
 app.use(cors());

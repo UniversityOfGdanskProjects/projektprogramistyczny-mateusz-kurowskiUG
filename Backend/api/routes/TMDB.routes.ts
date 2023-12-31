@@ -1,7 +1,6 @@
 import { Request, Response, Router } from "express";
 import db from "../../db/connect";
 import newUserInterface from "../../interfaces/newUser";
-import { emailRegex, passwordRegex } from "..";
 const TMDBRouter = Router();
 
 TMDBRouter.get("/movies/popular", async (req: Request, res: Response) => {});
