@@ -4,5 +4,6 @@ interface Review {
   content: string;
   rating: number;
   movie_id: string;
+  date: string;
 }
 export default Review;

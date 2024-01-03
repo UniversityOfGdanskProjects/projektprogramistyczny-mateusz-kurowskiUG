@@ -25,7 +25,6 @@ const userSchema: SchemaObject = {
     },
     cascade: "delete",
     eager: true,
-    
   },
 };
 export default userSchema;

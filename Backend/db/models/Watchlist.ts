@@ -6,7 +6,7 @@ const watchlistSchema: SchemaObject = {
     unique: true,
   },
   has: {
-    type: "relationship",
+    type: "relationships",
     target: "Movie",
     relationship: "HAS",
     direction: "out",

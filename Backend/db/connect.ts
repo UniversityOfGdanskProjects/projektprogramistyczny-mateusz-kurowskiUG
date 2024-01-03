@@ -1,5 +1,5 @@
-import Neode, { Model, Node, Relationship } from "neode";
-import dotenv from "dotenv";
+import Neode, { Model, Node, NodeCollection, Relationship } from "neode";
+import dotenv, { parse } from "dotenv";
 import Envs from "../interfaces/envs";
 import userSchema from "./models/User";
 import { v4 as uuidv4 } from "uuid";
@@ -14,6 +14,7 @@ import watchlistSchema from "./models/Watchlist";
 import testMovies from "../data/movie_ids_test.json";
 import movieSchema from "./models/Movie";
 import Movie from "../interfaces/Movie";
+import { json } from "express";
 
 class Db {
   instance: Neode;
@@ -206,35 +207,63 @@ class Db {
     const url = `https://api.themoviedb.org/3/search/movie?query=${query}&language=pl&page=1&include_adult=true`;
     try {
       const search = await Axios.get(url, { headers: this.tmdbHeaders });
-      console.log(search);
-
       return { result: true, data: search.data.results };
     } catch (err) {
       return { result: false, msg: "1" };
     }
   }
 
-  async getWatchlist(userId: string): Promise<DBResponse> {
+  async watchlistGetter(
+    userId: string
+  ): Promise<Node<Watchlist>> | Promise<boolean> {
     const user = await this.users.find(userId);
-    if (!user) return { result: false, msg: "User not found" };
+    if (!user) return false;
     const watchlist_rel: Relationship = await user.get("watchlist");
+    if (!watchlist_rel) return false;
     const watchlist: Node<Watchlist> = watchlist_rel.endNode();
-    console.log(watchlist.properties().id);
-
-    // return { result: true, data: watchlist };
+    if (!watchlist) return false;
+    return watchlist;
   }
 
-  // async getWatchlist(userId: string): Promise<DBResponse> {
-  //   const user = await this.users.find(userId);
+  async getWatchlist(userId: string): Promise<DBResponse> {
+    const watchlist = await this.watchlistGetter(userId);
+    if (!watchlist) return { result: false, msg: "No watchlist" };
+    const movies_rel: NodeCollection = await watchlist.get("has");
 
-  //   const watchlists = await user.relateTo("has").toJson();
-  //   return { result: true, data: watchlists };
-  // }
-  // async deleteWatchlist(id: string): Promise<DBResponse> {
-  //   const watchlist = await this.watchlists.find(id);
-  //   await watchlist.delete();
-  //   return { result: true };
-  // }
+    if (!movies_rel)
+      return { result: true, msg: "No movies in watchlist", data: [] };
+    if (movies_rel.length === 0)
+      return { result: true, msg: "No movies in watchlist", data: [] };
+
+    const movies = await Promise.all(
+      movies_rel.map(async (rel: Node<Movie>) => {
+        const movie = await rel.toJson();
+        const parsed = JSON.parse(JSON.stringify(movie));
+        delete parsed.node._id;
+        delete parsed.node._labels;
+        return parsed.node;
+      })
+    );
+    return { result: true, data: movies };
+  }
+
+  async deleteFromWatchlist(
+    userId: string,
+    movieId: string
+  ): Promise<DBResponse> {
+    const watchlist = await this.watchlistGetter(userId);
+    if (!watchlist) return { result: false, msg: "No watchlist" };
+    if (watchlist === true) return { result: false, msg: "No watchlist" };
+    const movies_rel: NodeCollection = await watchlist.get("has");
+    if (!movies_rel)
+      return { result: true, msg: "No movies in watchlist", data: [] };
+    if (movies_rel.length === 0)
+      return { result: true, msg: "No movies in watchlist", data: [] };
+    const deleted = await movies_rel.find((movie) => movie["id"] === movieId);
+    if (!deleted) return { result: false, msg: "Movie not found in watchlist" };
+    await deleted.detachFrom(watchlist);
+    return { result: true, msg: "Movie deleted" };
+  }
 }
 const db = new Db();
 
@@ -259,13 +288,38 @@ const db = new Db();
     status: "status",
   });
 
+  const movie2 = await db.createMovie({
+    id: uuidv4(),
+    title: "title",
+    // overview: tmdbMovie.overview || "",
+    popularity: 1,
+    release_date: "2021-01-01",
+    poster_path: "path",
+    adult: false,
+    backdrop_path: "path",
+    budget: 1,
+    status: "status",
+  });
+
   const watchlist = await db.getWatchlist(newUser.data[0].id);
 
   const addedToWatchlist = await db.addToWatchlist(
     newUser.data[0].id,
     movie.data.id
   );
-  console.log(addedToWatchlist);
+  const addedToWatchlist2 = await db.addToWatchlist(
+    newUser.data[0].id,
+    movie2.data.id
+  );
+  const watchlistMovies = await db.getWatchlist(newUser.data[0].id);
+  console.log(watchlistMovies);
+  const deleted = await db.deleteFromWatchlist(
+    newUser.data[0].id,
+    movie.data.id
+  );
+  console.log(deleted);
+
+  // console.log(watchlistMovies);
 
   //   const y = await db.loginUser("", "");
   //   console.log(y);
