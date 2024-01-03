@@ -6,24 +6,43 @@ import { v4 as uuidv4 } from "uuid";
 import newUserInterface from "../interfaces/newUser";
 // import UserInterface from "../interfaces/User";
 import { createHash, Hash } from "crypto";
-import DBResponse from "../interfaces/DBResponse";
+import {
+  DBResponse,
+  DBMessage,
+  UserCreationResponse,
+  GetMovieResponse,
+  GetGenresReponse,
+  WatchlistCreationResponse,
+  MovieCreationResponse,
+  GetWatchlistResponse,
+  AddToWatchlistResponse,
+  DeletionFromWatchlistResponse,
+  DeleteFromWatchlistResponse,
+} from "../interfaces/DBResponse";
 // import jwt from "jsonwebtoken";
-import { emailRegex } from "../data/regex";
+import { emailRegex, passwordRegex } from "../data/regex";
 import Axios from "axios";
 import watchlistSchema from "./models/Watchlist";
 import testMovies from "../data/movie_ids_test.json";
 import movieSchema from "./models/Movie";
-import Movie from "../interfaces/Movie";
-import { json } from "express";
+import playlistSchema from "./models/Playlist";
+import UserInterface from "../interfaces/User";
+import MovieInterface from "../interfaces/Movie";
+import { WatchlistInterface } from "../interfaces/Watchlist";
 
 class Db {
   instance: Neode;
   envs: Envs;
+  // models
   users: Model<User>;
   watchlists: Model<Watchlist>;
   movies: Model<Movie>;
+  reviews: Model<Review>;
+  playlists: Model<Playlist>;
+
   hash: Hash;
-  regex: RegExp = emailRegex;
+  emailRegex: RegExp = emailRegex;
+  passwordRegex: RegExp = passwordRegex;
   tmdbHeaders = {
     accept: "application/json",
     Authorization:
@@ -42,31 +61,11 @@ class Db {
     this.users.deleteAll();
     this.watchlists.deleteAll();
     this.movies.deleteAll();
+    this.playlists.deleteAll();
     return true;
   }
 
-  async addToWatchlist(userId: string, movieId): Promise<DBResponse> {
-    const user = await this.users.find(userId);
-    if (!user) return { result: false, msg: "User not found" };
-    const movie = await this.movies.find(movieId);
-    if (!movie) return { result: false, msg: "Movie not found" };
-    const watchlist_rel: Relationship = await user.get("watchlist");
-    const watchlist: Node<Watchlist> = watchlist_rel.endNode();
-    const result = await watchlist.relateTo(movie, "has");
-    if (!result) return { result: false, msg: "Already in watchlist" };
-    return {
-      result: true,
-      data: [
-        {
-          movie: await movie.toJson(),
-          watchlist: await watchlist.toJson(),
-        },
-      ],
-      msg: `Movie ${movie.get("title")} Added to watchlist`,
-    };
-  }
-
-  async loadTestMovies(): void {
+  async loadTestMovies(): Promise<boolean> {
     const moviesIds = testMovies.map((movie) => movie.id);
     moviesIds.forEach((id) => {
       this.getTmdbMById(id).then(async (res) => {
@@ -74,22 +73,7 @@ class Db {
         await this.createMovie(movie);
       });
     });
-  }
-
-  TmdbToMovie(tmdbMovie: any): Movie {
-    const movie: Movie = {
-      id: uuidv4(),
-      title: tmdbMovie.title,
-      // overview: tmdbMovie.overview || "",
-      popularity: tmdbMovie.popularity,
-      release_date: tmdbMovie.release_date,
-      poster_path: tmdbMovie.poster_path,
-      adult: tmdbMovie.adult,
-      backdrop_path: tmdbMovie.backdrop_path,
-      budget: tmdbMovie.budget,
-      status: tmdbMovie.status,
-    };
-    return movie;
+    return true;
   }
 
   getEnvs() {
@@ -107,6 +91,7 @@ class Db {
     this.users = this.instance.model("User", userSchema);
     this.watchlists = this.instance.model("Watchlist", watchlistSchema);
     this.movies = this.instance.model("Movie", movieSchema);
+    this.playlists = this.instance.model("Playlist", playlistSchema);
   }
 
   setUp() {
@@ -118,19 +103,35 @@ class Db {
     this.loadModels();
   }
 
-  async getUsers(): Promise<DBResponse> {
-    const users = await (await this.users.all()).toJson();
-    return { result: true, data: users };
+  async getUsers(): Promise<UserInterface[]> {
+    const users = await this.users.all();
+    if (!users) return [];
+    const jsoned = await Promise.all(
+      users.map(async (user) => {
+        const json = await user.properties();
+        return json;
+      })
+    );
+    return jsoned;
   }
 
-  async createUser(user: newUserInterface): Promise<DBResponse> {
+  async createUser(user: newUserInterface): Promise<UserCreationResponse> {
     const id = uuidv4();
-    if (!this.regex.test(user.email)) {
-      return { result: false, msg: "Invalid email" };
+    if (!this.emailRegex.test(user.email)) {
+      return { result: false, msg: DBMessage.INVALID_EMAIL, data: undefined };
     }
+
+    if (!this.passwordRegex.test(user.password)) {
+      return {
+        result: false,
+        msg: DBMessage.INVALID_PASSWORD,
+        data: undefined,
+      };
+    }
+
     const foundEmail = (await this.users.all({ email: user.email })).length;
     if (foundEmail) {
-      return { result: false, msg: "User already exists" };
+      return { result: false, msg: DBMessage.USER_EXISTS, data: undefined };
     }
     const hashedPassword = createHash("sha256")
       .update(user.password)
@@ -138,20 +139,32 @@ class Db {
 
     const newUser = { ...user, id, password: hashedPassword };
     const createdUser = await this.users.create(newUser);
-    const userResponse = await createdUser.toJson();
-    const watchlist = await this.createWatchlist(createdUser);
+    const userResponse = await createdUser.properties();
+    await this.createWatchlist(createdUser);
 
     return {
       result: true,
-      data: [userResponse, watchlist.data],
-      msg: "User created",
+      data: userResponse,
+      msg: DBMessage.USER_CREATED,
     };
   }
-  async createWatchlist(userNode: Node<User>): Promise<DBResponse> {
+  async createWatchlist(
+    userNode: Node<User>
+  ): Promise<WatchlistCreationResponse> {
     const id = uuidv4();
     const watchlist = await this.watchlists.create({ id });
+    if (!watchlist)
+      return {
+        result: false,
+        msg: DBMessage.WATCHLIST_NOT_CREATED,
+        data: undefined,
+      };
     await userNode.relateTo(watchlist, "watchlist");
-    return { result: true, data: watchlist, msg: "Watchlist created" };
+    return {
+      result: true,
+      msg: DBMessage.WATCHLIST_CREATED,
+      data: watchlist.properties(),
+    };
   }
 
   async loginUser(email: string, password: string): Promise<DBResponse> {
@@ -166,74 +179,161 @@ class Db {
     return { result: true, data: userJson };
   }
 
-  async createMovie(movie: Movie): Promise<DBResponse> {
+  async createMovie(movie: Movie): Promise<MovieCreationResponse> {
     const createdMovie = await this.movies.create(movie);
-    if (!createdMovie) return { result: false, msg: "No movies created" };
+    if (!createdMovie)
+      return {
+        result: false,
+        msg: DBMessage.MOVIE_NOT_CREATED,
+        data: undefined,
+      };
     const movieJson = await createdMovie.toJson();
-    return { result: true, data: movieJson };
+    return { result: true, data: movieJson, msg: DBMessage.MOVIE_CREATED };
   }
 
-  async getTmdbMPopular(): Promise<DBResponse> {
+  TmdbToMovie(tmdbMovie: Movie): MovieInterface {
+    const movie: MovieInterface = {
+      id: uuidv4(),
+      title: tmdbMovie.title,
+      // overview: tmdbMovie.overview || "",
+      popularity: tmdbMovie.popularity,
+      release_date: tmdbMovie.release_date,
+      poster_path: tmdbMovie.poster_path,
+      adult: tmdbMovie.adult,
+      backdrop_path: tmdbMovie.backdrop_path,
+      budget: tmdbMovie.budget,
+      status: tmdbMovie.status,
+    };
+    return movie;
+  }
+
+  async getTmdbMPopular(): Promise<GetMovieResponse> {
     const url = "https://api.themoviedb.org/3/movie/popular?language=pl&page=1";
     try {
       const popular = await Axios.get(url, {
         headers: this.tmdbHeaders,
       });
-      return { result: true, data: popular.data.results };
+
+      const movies = popular.data.results.map((movie: MovieInterface) => {
+        return this.TmdbToMovie(movie);
+      });
+      return {
+        result: true,
+        msg: DBMessage.MOVIE_FOUND,
+        data: movies,
+      };
     } catch (err) {
-      return { result: false, msg: err };
+      return { result: false, msg: DBMessage.TMDB_API_ERROR, data: [] };
     }
   }
-  async getTmdbMById(id: number): Promise<DBResponse> {
+  async getTmdbMById(id: number): Promise<GetMovieResponse> {
     const url = `https://api.themoviedb.org/3/movie/${id}`;
     try {
       const details = await Axios.get(url, { headers: this.tmdbHeaders });
-      return { result: true, data: details.data };
+      const movie = this.TmdbToMovie(details.data);
+      return { result: true, msg: DBMessage.MOVIE_FOUND, data: movie };
     } catch (err) {
-      return { result: false, msg: err };
+      return { result: false, msg: DBMessage.TMDB_API_ERROR, data: undefined };
     }
   }
-  async getGenres(): Promise<DBResponse> {
+  async getGenres(): Promise<GetGenresReponse> {
     const url = "https://api.themoviedb.org/3/genre/movie/list?language=pl";
     try {
       const genres = await Axios.get(url, { headers: this.tmdbHeaders });
-      return { result: true, data: genres.data.genres };
+      return {
+        result: true,
+        msg: DBMessage.GENRES_FOUND,
+        data: genres.data.genres,
+      };
     } catch (err) {
-      return { result: false, msg: err };
+      return { result: false, msg: DBMessage.TMDB_API_ERROR, data: undefined };
     }
   }
-  async searchTmdb(query: string): Promise<DBResponse> {
-    if (!query) return { result: false, msg: "No query" };
+  async searchTmdb(query: string): Promise<GetMovieResponse> {
+    if (!query)
+      return { result: false, msg: DBMessage.INVALID_QUERY, data: undefined };
     const url = `https://api.themoviedb.org/3/search/movie?query=${query}&language=pl&page=1&include_adult=true`;
     try {
       const search = await Axios.get(url, { headers: this.tmdbHeaders });
-      return { result: true, data: search.data.results };
+      const movies = search.data.results.map((movie: MovieInterface) => {
+        return this.TmdbToMovie(movie);
+      });
+      return { result: true, data: movies, msg: DBMessage.MOVIE_FOUND };
     } catch (err) {
-      return { result: false, msg: "1" };
+      return { result: false, msg: DBMessage.TMDB_API_ERROR, data: undefined };
     }
   }
 
-  async watchlistGetter(
-    userId: string
-  ): Promise<Node<Watchlist>> | Promise<boolean> {
+  async watchlistGetter(userId: string): Promise<Node<Watchlist> | undefined> {
     const user = await this.users.find(userId);
-    if (!user) return false;
+    if (!user) return undefined;
     const watchlist_rel: Relationship = await user.get("watchlist");
-    if (!watchlist_rel) return false;
+    if (!watchlist_rel) return undefined;
     const watchlist: Node<Watchlist> = watchlist_rel.endNode();
-    if (!watchlist) return false;
+    if (!watchlist) return undefined;
     return watchlist;
   }
 
-  async getWatchlist(userId: string): Promise<DBResponse> {
+  async getMovie(movieId: string): Promise<Node<Movie>> {
+    const movie = await this.movies.find(movieId);
+    return movie;
+  }
+  // WATCHLISTS
+  async addToWatchlist(
+    userId: string,
+    movieId
+  ): Promise<AddToWatchlistResponse> {
+    const userNode = await this.users.find(userId);
+    if (!userNode)
+      return { result: false, msg: DBMessage.USER_NOT_FOUND, data: undefined };
+    const movieNode = await this.getMovie(movieId);
+    if (!movieNode)
+      return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
+    const watchlistNode = await this.watchlistGetter(userId);
+    if (!watchlistNode)
+      return {
+        result: false,
+        msg: DBMessage.WATCHLIST_NOT_FOUND,
+        data: undefined,
+      };
+    const movies = await (await this.getWatchlist(userId)).data;
+    if (!movies)
+      return {
+        result: false,
+        msg: DBMessage.WATCHLIST_NOT_FOUND,
+        data: undefined,
+      };
+
+    const alreadyAdded = movies.find((movie) => movie.id === movieId);
+    if (alreadyAdded)
+      return {
+        result: false,
+        msg: DBMessage.ALREADY_IN_WATCHLIST,
+        data: alreadyAdded,
+      };
+    const result = await movieNode.relateTo(watchlistNode, "has");
+    if (!result)
+      return {
+        result: false,
+        msg: DBMessage.WATCHLIST_NOT_UPDATED,
+        data: undefined,
+      };
+    return { result: true, msg: DBMessage.WATCHLIST_UPDATED, data: undefined };
+  }
+  async getWatchlist(userId: string): Promise<GetWatchlistResponse> {
     const watchlist = await this.watchlistGetter(userId);
-    if (!watchlist) return { result: false, msg: "No watchlist" };
+    if (!watchlist)
+      return {
+        result: false,
+        msg: DBMessage.WATCHLIST_NOT_FOUND,
+        data: undefined,
+      };
     const movies_rel: NodeCollection = await watchlist.get("has");
 
     if (!movies_rel)
-      return { result: true, msg: "No movies in watchlist", data: [] };
+      return { result: true, msg: DBMessage.WATCHLIST_EMPTY, data: [] };
     if (movies_rel.length === 0)
-      return { result: true, msg: "No movies in watchlist", data: [] };
+      return { result: true, msg: DBMessage.WATCHLIST_EMPTY, data: [] };
 
     const movies = await Promise.all(
       movies_rel.map(async (rel: Node<Movie>) => {
@@ -244,37 +344,76 @@ class Db {
         return parsed.node;
       })
     );
-    return { result: true, data: movies };
+    return { result: true, msg: DBMessage.WATCHLIST_FOUND, data: movies };
   }
 
   async deleteFromWatchlist(
     userId: string,
     movieId: string
-  ): Promise<DBResponse> {
+  ): Promise<DeleteFromWatchlistResponse> {
     const watchlist = await this.watchlistGetter(userId);
-    if (!watchlist) return { result: false, msg: "No watchlist" };
-    if (watchlist === true) return { result: false, msg: "No watchlist" };
-    const movies_rel: NodeCollection = await watchlist.get("has");
-    if (!movies_rel)
-      return { result: true, msg: "No movies in watchlist", data: [] };
-    if (movies_rel.length === 0)
-      return { result: true, msg: "No movies in watchlist", data: [] };
-    const deleted = await movies_rel.find((movie) => movie["id"] === movieId);
-    if (!deleted) return { result: false, msg: "Movie not found in watchlist" };
-    await deleted.detachFrom(watchlist);
-    return { result: true, msg: "Movie deleted" };
+    if (!watchlist)
+      return {
+        result: false,
+        msg: DBMessage.WATCHLIST_NOT_FOUND,
+        data: undefined,
+      };
+
+    const movie = await this.getMovie(movieId);
+    const result = await movie.detachFrom(watchlist);
+    if (!result)
+      return {
+        result: false,
+        msg: DBMessage.MOVIE_NOT_UPDATED,
+        data: undefined,
+      };
+    return { result: true, msg: DBMessage.MOVIE_UPDATED, data: undefined };
   }
+
+  async createPlaylist(userId: string) {
+    const user = await this.users.find(userId);
+    if (!user) return
+  }
+  async getPlaylists(userId: string) {}
+  async getPlaylist(playlistId: string) {}
+  async deletePlaylist(playlistId: string) {}
 }
 const db = new Db();
 
 (async () => {
-  await db.users.deleteAll();
-  await db.watchlists.deleteAll();
+  // await db.users.deleteAll();
+  // await db.watchlists.deleteAll();
+  // const users0 = await db.getUsers();
+  // console.log(users0);
+
+  //users
+
   const newUser = await db.createUser({
     email: "email@mail.com",
-    password: "password",
+    password: "Admin123.",
+  });
+  const newUser2 = await db.createUser({
+    email: "email@mail2.com",
+    password: "Admin123.",
   });
 
+  // const users = await db.getUsers();
+  // console.log(users);
+
+  //tmdbMovies
+  // const tmdbPopular = await db.getTmdbMPopular();
+  // console.log(tmdbPopular);
+
+  // const tmdbMovie = await db.getTmdbMById(22);
+  // console.log(tmdbMovie);
+
+  // const genres = await db.getGenres();
+  // console.log(genres);
+
+  // const search = await db.searchTmdb("matrix");
+  // console.log(search);
+
+  //movies
   const movie = await db.createMovie({
     id: uuidv4(),
     title: "title",
@@ -300,45 +439,36 @@ const db = new Db();
     budget: 1,
     status: "status",
   });
-
-  const watchlist = await db.getWatchlist(newUser.data[0].id);
-
+  // watchlists
   const addedToWatchlist = await db.addToWatchlist(
-    newUser.data[0].id,
+    newUser.data.id,
     movie.data.id
   );
   const addedToWatchlist2 = await db.addToWatchlist(
-    newUser.data[0].id,
+    newUser.data.id,
     movie2.data.id
   );
-  const watchlistMovies = await db.getWatchlist(newUser.data[0].id);
-  console.log(watchlistMovies);
-  const deleted = await db.deleteFromWatchlist(
-    newUser.data[0].id,
+  const addedToWatchlist3 = await db.addToWatchlist(
+    newUser2.data.id,
     movie.data.id
   );
-  console.log(deleted);
+  const addedToWatchlist4 = await db.addToWatchlist(
+    newUser2.data.id,
+    movie2.data.id
+  );
 
-  // console.log(watchlistMovies);
+  // const watchlist1 = await db.getWatchlist(newUser.data.id);
+  // const watchlist2 = await db.getWatchlist(newUser2.data.id);
+  // const deleted = await db.deleteFromWatchlist(newUser.data.id, movie.data.id);
+  // const watchlist3 = await db.getWatchlist(newUser.data.id);
+  // const watchlist4 = await db.getWatchlist(newUser2.data.id);
+  // console.log(watchlist1);
+  // console.log(watchlist2);
+  // console.log(watchlist3);
+  // console.log(watchlist4);
 
-  //   const y = await db.loginUser("", "");
-  //   console.log(y);
-  // const logged = await db.loginUser("email@mail.com", "password");
-  // console.log(logged);
-  // const popular = await db.getTmdbMPopular();
-  // console.log(popular);
-  // const moviesById = await db.getTmdbMById(22);
-  // console.log(moviesById);
-  // const genres = await db.getGenres();
-  // console.log(genres);
-  // const search = await db.searchTmdb("matrix");
-  // console.log(search);
-  // const watchlist = await db.createWatchlist("Watchlist", newUser.data.id);
-  // console.log(watchlist.data);
-  // const watchlists = await db.getWatchlist("1");
-  // console.log(watchlists);
-  // const deleted = await db.deleteWatchlist("1");
   // console.log(deleted);
+  // console.log(watchlistMovies);
 })();
 
 export default db;

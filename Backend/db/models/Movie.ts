@@ -48,7 +48,19 @@ const movieSchema: SchemaObject = {
     properties: {
       name: "string",
     },
-    cascade: "delete",
+    cascade: "detach",
+    eager: true,
+  },
+  reviewed: {
+    type: "relationships",
+    target: "User",
+    relationship: "REVIEWED",
+    direction: "in",
+    properties: {
+      name: "string",
+
+    },
+    cascade: "detach",
     eager: true,
   },
 };

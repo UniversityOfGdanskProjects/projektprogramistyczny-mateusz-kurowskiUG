@@ -1,27 +1,30 @@
 import { Request, Response, Router } from "express";
 import db from "../../db/connect";
 import newUserInterface from "../../interfaces/newUser";
-import { emailRegex, passwordRegex } from "..";
+import { emailRegex, passwordRegex } from "../../data/regex";
 const usersRouter = Router();
 
 usersRouter.post("/register", async (req: Request, res: Response) => {
+  if (!req.body)
+    return res.status(400).send({ msg: "Please enter all fields" });
+  if (!req.body["email"] || !req.body["password"])
+    return res.status(400).send({
+      msg: "Please enter all fields",
+    });
   const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ msg: "Please enter all fields" });
-  }
   if (!emailRegex.test(email))
-    return res.status(400).json({ msg: "Invalid email" });
+    return res.status(400).send({ msg: "Invalid email" });
   if (password.length < 6)
     return res
       .status(400)
-      .json({ msg: "Password must be at least 6 characters" });
+      .send({ msg: "Password must be at least 6 characters" });
   if (password.length > 20)
     return res
       .status(400)
-      .json({ msg: "Password must be less than 20 characters" });
+      .send({ msg: "Password must be less than 20 characters" });
 
   if (!passwordRegex.test(password)) {
-    return res.status(400).json({
+    return res.status(400).send({
       msg: "Password must contain at least one uppercase letter, one lowercase letter, and one special character",
     });
   }
@@ -31,9 +34,13 @@ usersRouter.post("/register", async (req: Request, res: Response) => {
   };
   const registerResult = await db.createUser(newUser);
   if (!registerResult.result) {
-    return res.status(400).json({ msg: "User already exists" });
+    return res.status(400).send({ msg: "User already exists" });
   }
-  return res.status(200).json(registerResult);
+  console.log(registerResult.data);
+
+  return res
+    .status(200)
+    .send({ msg: registerResult.msg, data: registerResult.data });
 });
 
 usersRouter.post("/login", async (req: Request, res: Response) => {

@@ -1,4 +1,4 @@
-interface Movie {
+interface MovieInterface {
   id: string;
   title: string;
   // overview: string;
@@ -10,4 +10,4 @@ interface Movie {
   budget: number;
   status: string;
 }
-export default Movie;
+export default MovieInterface;
