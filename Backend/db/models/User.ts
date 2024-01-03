@@ -15,5 +15,17 @@ const userSchema: SchemaObject = {
     email: true,
     unique: true,
   },
+  watchlist: {
+    type: "relationship",
+    target: "Watchlist",
+    relationship: "WATCHLIST",
+    direction: "out",
+    properties: {
+      name: "string",
+    },
+    cascade: "delete",
+    eager: true,
+    
+  },
 };
 export default userSchema;

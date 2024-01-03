@@ -1,11 +1,40 @@
 import { Request, Response, Router } from "express";
 import db from "../../db/connect";
-import newUserInterface from "../../interfaces/newUser";
 const TMDBRouter = Router();
 
-TMDBRouter.get("/movies/popular", async (req: Request, res: Response) => {});
-TMDBRouter.get("/movies/:id", async (req: Request, res: Response) => {});
-TMDBRouter.get("/movies/search", async (req: Request, res: Response) => {});
-TMDBRouter.get("/movies/genres", async (req: Request, res: Response) => {});
+TMDBRouter.get("/", async (req: Request, res: Response) => {
+  res.send("Hello World!");
+  console.log(1);
+});
+TMDBRouter.get("/popular", async (req: Request, res: Response) => {
+  const popular = await db.getTmdbMPopular();
+  if (!popular.result) return res.status(400).json(popular);
+  return res.status(200).send(popular);
+});
+TMDBRouter.get("/search", async (req: Request, res: Response) => {
+  const query = req.params.query;
+  console.log(query);
+  if (!query) return res.status(400).json({ result: false, msg: "No query" });
+  const search = await db.searchTmdb(query);
+  if (!search.result) return res.status(400).json(search);
+  return res.status(200).send(search);
+});
 
+TMDBRouter.get("/genres", async (req: Request, res: Response) => {
+  const genres = await db.getGenres();
+  if (!genres.result) return res.status(400).json(genres);
+  return res.status(200).send(genres);
+});
+
+TMDBRouter.get("/:id(\\d+)", async (req: Request, res: Response) => {
+  const id = +req.params.id;
+  if (!id)
+    return res.status(400).json({ result: false, msg: "No id provided" });
+  const movie = await db.getTmdbMById(id);
+  if (!movie.result) return res.status(400).json(movie);
+  return res.status(200).send(movie);
+});
+TMDBRouter.get("*", async (req: Request, res: Response) => {
+  res.status(404).send({ result: false, msg: "Not found" });
+});
 export default TMDBRouter;
