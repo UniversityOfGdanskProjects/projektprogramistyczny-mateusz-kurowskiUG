@@ -1,6 +1,7 @@
 import GenreInterface from "./Genre";
 import MovieInterface from "./Movie";
 import PlaylistInterface from "./Playlist";
+import { ReviewInterface } from "./ReviewInterface";
 import UserInterface from "./User";
 export interface DBResponse {
   result: boolean;
@@ -176,60 +177,113 @@ export interface AddToPlaylistResponse {
     | DBMessage.ALREADY_IN_PLAYLIST;
   data: MovieInterface | undefined;
 }
+export interface AddReviewResponse {
+  result: boolean;
+  msg:
+    | DBMessage.MOVIE_NOT_FOUND
+    | DBMessage.USER_NOT_FOUND
+    | DBMessage.REVIEW_CREATED
+    | DBMessage.REVIEW_NOT_CREATED
+    | DBMessage.ALREADY_REVIEWED
+    | DBMessage.INVALID_CONTENT
+    | DBMessage.INVALID_RATING
+    | DBMessage.REVIEW_VALID;
+  data: ReviewInterface | undefined;
+}
+export interface GetReviewsResponse {
+  result: boolean;
+  msg: DBMessage.MOVIE_NOT_FOUND | DBMessage.NO_REVIEWS;
+  data: ReviewInterface[] | undefined;
+}
+export interface DeleteReviewResponse {
+  result: boolean;
+  msg:
+    | DBMessage.MOVIE_NOT_FOUND
+    | DBMessage.USER_NOT_FOUND
+    | DBMessage.REVIEW_DELETED
+    | DBMessage.REVIEW_NOT_DELETED
+    | DBMessage.NOT_REVIEWED
+    | DBMessage.REVIEW_NOT_FOUND;
+  data: ReviewInterface | undefined;
+}
+export interface isReviewValidInterface {
+  result: boolean;
+  msg:
+    | DBMessage.INVALID_CONTENT
+    | DBMessage.INVALID_RATING
+    | DBMessage.MOVIE_NOT_FOUND
+    | DBMessage.USER_NOT_FOUND
+    | DBMessage.REVIEW_VALID;
+}
 export enum DBMessage {
+  REVIEW_VALID = "Review is valid.",
+  INVALID_CONTENT = "Invalid content",
+  INVALID_RATING = "Invalid rating",
+  ALREADY_IN_PLAYLIST = "Movie already in playlist",
+  ALREADY_IN_WATCHLIST = "Movie already in watchlist",
+  ALREADY_REVIEWED = "Movie already reviewed",
+  GENRES_FOUND = "Genres found",
+  INVALID_CREDIENTIALS = "Invalid credentials",
+  INVALID_EMAIL = "Invalid email",
+  INVALID_NAME = "Invalid name",
+  INVALID_PASSWORD = "Invalid password",
+  INVALID_PLAYLIST = "Invalid playlist",
   INVALID_QUERY = "Invalid query",
+  INVALID_REVIEW = "Invalid review",
+  MOVIE_CREATED = "Movie created successfully",
+  MOVIE_DELETED = "Movie deleted successfully",
+  MOVIE_FOUND = "Movie found",
+  MOVIE_NOT_CREATED = "Movie not created",
+  MOVIE_NOT_DELETED = "Movie not deleted",
+  MOVIE_NOT_FOUND = "Movie not found",
+  MOVIE_NOT_UPDATED = "Movie not updated",
+  MOVIE_UPDATED = "Movie updated successfully",
+  NOT_IN_PLAYLIST = "Movie not in playlist",
+  NOT_IN_WATCHLIST = "Movie not in watchlist",
+  NOT_REVIEWED = "Movie not reviewed",
+  NO_PLAYLISTS = "No playlists",
+  PLAYLISTS_FOUND = "Playlists found",
+  PLAYLISTS_NOT_FOUND = "Playlists not found",
+  PLAYLIST_CREATED = "Playlist created successfully",
+  PLAYLIST_DELETED = "Playlist deleted successfully",
+  PLAYLIST_EMPTY = "Playlist is empty",
+  PLAYLIST_FOUND = "Playlist found",
+  PLAYLIST_NOT_CREATED = "Playlist not created",
+  PLAYLIST_NOT_DELETED = "Playlist not deleted",
+  PLAYLIST_NOT_FOUND = "Playlist not found",
+  PLAYLIST_NOT_UPDATED = "Playlist not updated",
+  PLAYLIST_UPDATED = "Playlist updated successfully",
+  REVIEW_CREATED = "Review created successfully",
+  REVIEW_DELETED = "Review deleted successfully",
+  REVIEW_FOUND = "Review found",
+  REVIEW_NOT_CREATED = "Review not created",
+  REVIEW_NOT_DELETED = "Review not deleted",
+  REVIEW_NOT_FOUND = "Review not found",
+  REVIEW_NOT_UPDATED = "Review not updated",
+  REVIEW_UPDATED = "Review updated successfully",
+  TMDB_API_ERROR = "TMDB API error",
   USER_CREATED = "User created successfully",
+  USER_DELETED = "User deleted successfully",
   USER_EXISTS = "User already exists",
   USER_LOGGED_IN = "User logged in successfully",
   USER_LOGGED_OUT = "User logged out successfully",
-  USER_UPDATED = "User updated successfully",
-  USER_DELETED = "User deleted successfully",
-  USER_NOT_DELETED = "User not deleted",
-  USER_NOT_UPDATED = "User not updated",
-  USER_NOT_LOGGED_IN = "User not logged in",
-  USER_NOT_LOGGED_OUT = "User not logged out",
-  USER_NOT_CREATED = "User not created",
-  USER_NOT_FOUND = "User not found",
   USER_NOT_AUTHENTICATED = "User not authenticated",
   USER_NOT_AUTHORIZED = "User not authorized",
-  INVALID_EMAIL = "Invalid email",
-  INVALID_PASSWORD = "Invalid password",
-  INVALID_CREDIENTIALS = "Invalid credentials",
+  USER_NOT_CREATED = "User not created",
+  USER_NOT_DELETED = "User not deleted",
+  USER_NOT_FOUND = "User not found",
+  USER_NOT_LOGGED_IN = "User not logged in",
+  USER_NOT_LOGGED_OUT = "User not logged out",
+  USER_NOT_UPDATED = "User not updated",
+  USER_UPDATED = "User updated successfully",
   WATCHLIST_CREATED = "Watchlist created successfully",
+  WATCHLIST_DELETED = "Watchlist deleted successfully",
+  WATCHLIST_EMPTY = "Watchlist is empty",
   WATCHLIST_FOUND = "Watchlist found",
   WATCHLIST_NOT_CREATED = "Watchlist not created",
-  WATCHLIST_DELETED = "Watchlist deleted successfully",
   WATCHLIST_NOT_DELETED = "Watchlist not deleted",
-  WATCHLIST_UPDATED = "Watchlist updated successfully",
-  WATCHLIST_NOT_UPDATED = "Watchlist not updated",
   WATCHLIST_NOT_FOUND = "Watchlist not found",
-  MOVIE_CREATED = "Movie created successfully",
-  MOVIE_NOT_CREATED = "Movie not created",
-  MOVIE_DELETED = "Movie deleted successfully",
-  MOVIE_NOT_DELETED = "Movie not deleted",
-  MOVIE_UPDATED = "Movie updated successfully",
-  MOVIE_NOT_UPDATED = "Movie not updated",
-  MOVIE_NOT_FOUND = "Movie not found",
-  MOVIE_FOUND = "Movie found",
-  TMDB_API_ERROR = "TMDB API error",
-  GENRES_FOUND = "Genres found",
-  WATCHLIST_EMPTY = "Watchlist is empty",
-  NOT_IN_WATCHLIST = "Movie not in watchlist",
-  ALREADY_IN_WATCHLIST = "Movie already in watchlist",
-  PLAYLIST_CREATED = "Playlist created successfully",
-  PLAYLIST_NOT_CREATED = "Playlist not created",
-  PLAYLIST_DELETED = "Playlist deleted successfully",
-  PLAYLIST_NOT_DELETED = "Playlist not deleted",
-  PLAYLIST_UPDATED = "Playlist updated successfully",
-  PLAYLIST_NOT_UPDATED = "Playlist not updated",
-  PLAYLIST_NOT_FOUND = "Playlist not found",
-  PLAYLIST_FOUND = "Playlist found",
-  ALREADY_IN_PLAYLIST = "Movie already in playlist",
-  NOT_IN_PLAYLIST = "Movie not in playlist",
-  INVALID_PLAYLIST = "Invalid playlist",
-  INVALID_NAME = "Invalid name",
-  PLAYLISTS_FOUND = "Playlists found",
-  PLAYLISTS_NOT_FOUND = "Playlists not found",
-  PLAYLIST_EMPTY = "Playlist is empty",
-  NO_PLAYLISTS = "No playlists",
+  WATCHLIST_NOT_UPDATED = "Watchlist not updated",
+  WATCHLIST_UPDATED = "Watchlist updated successfully",
+  NO_REVIEWS = "No reviews",
 }

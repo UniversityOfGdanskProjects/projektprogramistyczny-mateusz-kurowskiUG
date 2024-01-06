@@ -2,6 +2,10 @@ import { Request, Response, Router } from "express";
 import db from "../../db/connect";
 import newUserInterface from "../../interfaces/newUser";
 const adminRouter = Router();
+adminRouter.use((req: Request, res: Response, next) => {
+  // TODO: Check if user is admin
+  next();
+});
 adminRouter.get("/users", async (req: Request, res: Response) => {
   const users = await db.getUsers();
   if (!users) return res.status(400).json(users);

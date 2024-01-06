@@ -57,13 +57,22 @@ playlistsRouter.patch("/:playlistId", async (req: Request, res: Response) => {
   if (!playlist.result) {
     return res.status(400).json(playlist);
   }
-  let rename: boolean | string = false;
+  let rename: object = {
+    result: false,
+    msg: "Playlist not renamed",
+    data: undefined,
+  };
 
   if (name) {
     const result = await db.renamePlaylist(playlistId, name);
     if (!result.result) {
-      return res.status(400).json({ result });
+      return res.status(400).json(result);
     }
+    rename["result"] = true;
+    rename["msg"] = "Playlist renamed";
+  }
+  if (!movieId) {
+    return res.status(200).json({ msg: "Playlist updated", rename });
   }
   const movie = await db.getMovieById(movieId);
   if (!movie.result) {

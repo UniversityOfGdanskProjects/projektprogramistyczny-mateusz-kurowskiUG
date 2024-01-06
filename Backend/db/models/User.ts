@@ -16,6 +16,10 @@ const userSchema: SchemaObject = {
     email: true,
     unique: true,
   },
+  role: {
+    type: "string",
+    required: true,
+  },
   watchlist: {
     type: "nodes",
     target: "Movie",
@@ -45,6 +49,7 @@ const userSchema: SchemaObject = {
     relationship: "REVIEWED",
     direction: "out",
     properties: {
+      id: "uuid",
       content: "string",
       rating: "number",
       date: "date",

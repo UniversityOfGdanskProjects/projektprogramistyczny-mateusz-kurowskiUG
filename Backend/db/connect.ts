@@ -21,6 +21,8 @@ import {
   AddToPlaylistResponse,
   RemoveFromPlaylistResponse,
   LoginResponse,
+  AddReviewResponse,
+  isReviewValidInterface,
 } from "../interfaces/DBResponse";
 // import jwt from "jsonwebtoken";
 import { emailRegex, passwordRegex } from "../data/regex";
@@ -31,6 +33,7 @@ import playlistSchema from "./models/Playlist";
 import UserInterface from "../interfaces/User";
 import MovieInterface from "../interfaces/Movie";
 import PlaylistInterface from "../interfaces/Playlist";
+import { ReviewInterface } from "../interfaces/ReviewInterface";
 
 class Db {
   instance: Neode;
@@ -97,11 +100,13 @@ class Db {
       email: "email@mail.com",
       password: "Admin123.",
       id: "fca4b1e4-2f59-4352-bd61-8b3bf804686e",
+      role: "admin",
     };
     const u2 = {
       email: "email@mail2.com",
       password: "Admin123.",
       id: "4ff3819b-501d-458a-a335-c75ec2510a1e",
+      role: "user",
     };
 
     const user1 = this.users.create(u1);
@@ -227,9 +232,9 @@ class Db {
       .update(user.password)
       .digest("hex");
 
-    const newUser = { ...user, id, password: hashedPassword };
+    const newUser = { ...user, id, password: hashedPassword, role: "user" };
     const createdUser = await this.users.create(newUser);
-    const userResponse = await createdUser.properties();
+    const userResponse = createdUser.properties();
 
     return {
       result: true,
@@ -263,7 +268,7 @@ class Db {
     const movie = await this.movies.find(movieId);
     if (!movie)
       return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
-    const movieJson = await movie.properties();
+    const movieJson = movie.properties();
     return { result: true, msg: DBMessage.MOVIE_FOUND, data: movieJson };
   }
 
@@ -670,7 +675,8 @@ class Db {
         msg: DBMessage.PLAYLIST_NOT_FOUND,
         data: undefined,
       };
-    const result = await playlist.update({ name });
+    const date = new Date();
+    const result = await playlist.update({ name, date });
     if (!result)
       return {
         result: false,
@@ -719,6 +725,90 @@ class Db {
       data: playlist.properties(),
     };
   }
+  // REVIEWS
+  validateReview(review: ReviewInterface): isReviewValidInterface {
+    if (review.rating < 0 || review.rating > 10)
+      return { result: false, msg: DBMessage.INVALID_RATING };
+    if (review.content.length < 10 || review.content.length > 500)
+      return { result: false, msg: DBMessage.INVALID_CONTENT };
+    if (!review.movieId)
+      return { result: false, msg: DBMessage.MOVIE_NOT_FOUND };
+    if (!review.userId) return { result: false, msg: DBMessage.USER_NOT_FOUND };
+    return { result: true, msg: DBMessage.REVIEW_VALID };
+  }
+
+  async addReview({
+    userId,
+    movieId,
+    content,
+    rating,
+  }: {
+    userId: string;
+    movieId: string;
+    content: string;
+    rating: number;
+  }): Promise<AddReviewResponse> {
+    const review: ReviewInterface = {
+      id: uuidv4(),
+      date: new Date(),
+      content,
+      rating,
+      movieId,
+      userId,
+    };
+    const isValid = this.validateReview(review);
+    if (!isValid.result)
+      return {
+        result: false,
+        msg: isValid.msg,
+        data: undefined,
+      };
+    const user = await this.users.find(userId);
+    if (!user)
+      return { result: false, msg: DBMessage.USER_NOT_FOUND, data: undefined };
+    const movie = await this.movies.find(movieId);
+    if (!movie)
+      return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
+    const usersReviews: NodeCollection = await user.get("reviewed");
+    if (!usersReviews)
+      return {
+        result: false,
+        msg: DBMessage.REVIEW_NOT_CREATED,
+        data: undefined,
+      };
+
+    if (usersReviews.length) {
+      const alreadyReviewed = await usersReviews.find(async (review) => {
+        const reviewProps = review.properties();
+        const movie = await review.endNode();
+        console.log(await movie.toJson());
+
+        return movie.properties().id === movieId;
+      });
+      // console.log(alreadyReviewed.properties());
+
+      if (alreadyReviewed)
+        return {
+          result: false,
+          msg: DBMessage.ALREADY_REVIEWED,
+          data: undefined,
+        };
+    }
+    const create = await user.relateTo(movie, "reviewed", {
+      content: review.content,
+      rating: review.rating,
+      date: review.date,
+    });
+    if (!create)
+      return {
+        result: false,
+        msg: DBMessage.REVIEW_NOT_CREATED,
+        data: undefined,
+      };
+    return { result: true, msg: DBMessage.REVIEW_CREATED, data: review };
+  }
+  async getReviewsByMovie() {}
+  async deleteReview() {}
 }
 const db = new Db();
 
@@ -797,21 +887,40 @@ const db = new Db();
     playlist12.id,
     movie1.id
   );
-  console.log(deletedFromPlaylist);
-
-  // console.log(added1);
-  // console.log(added2);
-
-  console.log(movie1.id);
-  console.log(movie2.id);
+  // console.log(deletedFromPlaylist);
 
   const playlists = await db.getPlaylists(u1.id);
-  console.dir(playlists, { depth: null });
+  // console.dir(playlists, { depth: null });
   // const delPlaylist = await db.deletePlaylist(playlist1.data.id);
   // console.log(delPlaylist);
 
   // const playlists = await db.getPlaylists(newUser.data?.id);
   // console.log(playlists);
+
+  const rename = await db.renamePlaylist(playlist12.id, "newName");
+  // console.log(rename);
+
+  const u1Reviews = await db.addReview({
+    userId: u1.id,
+    movieId: movie1.id,
+    content: "contentasdsa",
+    rating: 10,
+  });
+  const u2Reviews = await db.addReview({
+    userId: u2.id,
+    movieId: movie1.id,
+    content: "contentasdsa",
+    rating: 10,
+  });
+  const u3Reviews = await db.addReview({
+    userId: u1.id,
+    movieId: movie2.id,
+    content: "contentasdsasasd",
+    rating: 1,
+  });
+  // console.log(u1Reviews);
+  // console.log(u2Reviews);
+  // console.log(u3Reviews);
 })();
 
 export default db;
