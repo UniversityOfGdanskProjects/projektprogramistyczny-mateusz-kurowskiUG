@@ -95,6 +95,73 @@ class Db {
     this.playlists = this.instance.model("Playlist", playlistSchema);
   }
 
+  async testData() {
+    const u1 = {
+      email: "email@mail.com",
+      password: "Admin123.",
+      id: "fca4b1e4-2f59-4352-bd61-8b3bf804686e",
+    };
+    const u2 = {
+      email: "email@mail2.com",
+      password: "Admin123.",
+      id: "4ff3819b-501d-458a-a335-c75ec2510a1e",
+    };
+
+    const user1 = this.users.create(u1);
+    const user2 = this.users.create(u2);
+
+    const movie1 = {
+      id: "6f191db4-2f47-4477-8f0c-f303b1bf6e90",
+      title: "title",
+      // overview: tmdbMovie.overview || "",
+      popularity: 1,
+      release_date: "2021-01-01",
+      poster_path: "path",
+      adult: false,
+      backdrop_path: "path",
+      budget: 1,
+      status: "status",
+    };
+    const movie2 = {
+      id: "b47fa852-dec5-408f-a7d7-f8ab62297608",
+      title: "title",
+      // overview: tmdbMovie.overview || "",
+      popularity: 1,
+      release_date: "2021-01-01",
+      poster_path: "path",
+      adult: false,
+      backdrop_path: "path",
+      budget: 1,
+      status: "status",
+    };
+
+    const m1 = db.createMovie(movie1);
+    const m2 = db.createMovie(movie2);
+
+    const m3 = db.createMovie({
+      id: "b47fa852-dec5-408f-a7d7-f8ab62297609",
+      title: "title",
+      // overview: tmdbMovie.overview || "",
+      popularity: 1,
+      release_date: "2021-01-01",
+      poster_path: "path",
+      adult: false,
+      backdrop_path: "path",
+      budget: 1,
+      status: "status",
+    });
+    const playlist12: PlaylistInterface = {
+      id: "b47fa852-dec5-408f-a7d7-f8ab62297610",
+      name: "p1234",
+      date: new Date(),
+    };
+    const playlist = this.playlists.create(playlist12);
+    const inserted = await Promise.all([user1, user2, m1, m2, m3, playlist]);
+    const [newUser, newUser2, movie1R, movie2R, movie3, newPlaylist] = inserted;
+    newUser.relateTo(newPlaylist, "playlist", { date: new Date() });
+    return { u1, u2, movie1, movie2, movie3, playlist12 };
+  }
+
   setUp() {
     // this.instance = new Neode(
     //   this.envs.NEO4J_URI,
@@ -519,7 +586,32 @@ class Db {
     movieId: string
   ) {}
 
-  async getPlaylist(playlistId: string) {}
+    async updatePlaylistName(playlistId: string, name: string) {
+    const playlist = await this.playlists.find(playlistId);
+    if (!playlist)
+      return {
+        result: false,
+        msg: DBMessage.PLAYLIST_NOT_FOUND,
+        data: undefined,
+      };
+    const result = await playlist.update({ name });
+    if (!result)
+      return {
+        result: false,
+        msg: DBMessage.PLAYLIST_NOT_UPDATED,
+        data: undefined,
+      };
+    }
+
+  async getPlaylistById(playlistId: string) {
+    const playlist = await this.playlists.find(playlistId);
+    if (!playlist)
+      return {
+        result: false,
+        msg: DBMessage.PLAYLIST_NOT_FOUND,
+        data: undefined,
+      };
+  }
   async deletePlaylist(playlistId: string): Promise<DeletePlaylistResponse> {
     const playlist = await this.playlists.find(playlistId);
     if (!playlist)
@@ -552,15 +644,6 @@ const db = new Db();
 
   //users
 
-  const newUser = await db.createUser({
-    email: "email@mail.com",
-    password: "Admin123.",
-  });
-  const newUser2 = await db.createUser({
-    email: "email@mail2.com",
-    password: "Admin123.",
-  });
-
   // const users = await db.getUsers();
   // console.log(users);
 
@@ -578,55 +661,18 @@ const db = new Db();
   // console.log(search);
 
   //movies
-  const movie = await db.createMovie({
-    id: uuidv4(),
-    title: "title",
-    // overview: tmdbMovie.overview || "",
-    popularity: 1,
-    release_date: "2021-01-01",
-    poster_path: "path",
-    adult: false,
-    backdrop_path: "path",
-    budget: 1,
-    status: "status",
-  });
 
-  const movie2 = await db.createMovie({
-    id: uuidv4(),
-    title: "title",
-    // overview: tmdbMovie.overview || "",
-    popularity: 1,
-    release_date: "2021-01-01",
-    poster_path: "path",
-    adult: false,
-    backdrop_path: "path",
-    budget: 1,
-    status: "status",
-  });
   // watchlists
   // const getWatchlist = await db.getWatchlist(newUser.data.id);
   // console.log(getWatchlist);
 
-  const addedToWatchlist = await db.addToWatchlist(
-    newUser.data.id,
-    movie.data.id
-  );
-  const addedToWatchlist2 = await db.addToWatchlist(
-    newUser.data.id,
-    movie2.data.id
-  );
-  const addedToWatchlist3 = await db.addToWatchlist(
-    newUser2.data.id,
-    movie.data.id
-  );
-  const addedToWatchlist4 = await db.addToWatchlist(
-    newUser2.data.id,
-    movie2.data.id
-  );
-  const addedToWatchlist5 = await db.addToWatchlist(
-    newUser2.data.id,
-    movie2.data.id
-  );
+  const { u1, u2, movie1, movie2, movie3, playlist12 } = await db.testData();
+
+  const addedToWatchlist = await db.addToWatchlist(u1.id, movie1.id);
+  const addedToWatchlist2 = await db.addToWatchlist(u1.id, movie2.id);
+  const addedToWatchlist3 = await db.addToWatchlist(u2.id, movie1.id);
+  const addedToWatchlist4 = await db.addToWatchlist(u2.id, movie2.id);
+  const addedToWatchlist5 = await db.addToWatchlist(u2.id, movie2.id);
   // console.log(addedToWatchlist);
   // console.log(addedToWatchlist2);
   // console.log(addedToWatchlist3);
@@ -654,33 +700,19 @@ const db = new Db();
   // console.log(deleted);
   // console.log(watchlistMovies);
   // PLAYLISTS
-  const playlist1 = await db.createPlaylist(newUser.data?.id, "playlist1");
-  const playlist2 = await db.createPlaylist(newUser.data?.id, "playlist2");
-
-  const added1 = await db.addToPlaylist(
-    newUser.data?.id,
-    playlist1.data?.id,
-    movie.data?.id
-  );
-  const added2 = await db.addToPlaylist(
-    newUser.data?.id,
-    playlist1.data?.id,
-    movie2.data?.id
-  );
-  const added3 = await db.addToPlaylist(
-    newUser2.data?.id,
-    playlist2.data?.id,
-    movie.data?.id
-  );
-  const added4 = await db.addToPlaylist(
-    newUser2.data?.id,
-    playlist2.data?.id,
-    movie2.data?.id
-  );
+  const playlist1 = await db.createPlaylist(u1.id, "playlist1");
+  const playlist2 = await db.createPlaylist(u1.id, "playlist2");
+  const added1 = await db.addToPlaylist(u1.id, playlist12.id, movie1.id);
+  const added2 = await db.addToPlaylist(u1.id, playlist12.id, movie2.id);
+  const added3 = await db.addToPlaylist(u2.id, playlist2.data?.id, movie1.id);
+  const added4 = await db.addToPlaylist(u2.id, playlist2.data?.id, movie2.id);
   // console.log(added1);
   // console.log(added2);
 
-  const playlists = await db.getPlaylists(newUser.data?.id);
+  console.log(movie1.id);
+  console.log(movie2.id);
+
+  const playlists = await db.getPlaylists(u1.id);
   console.dir(playlists, { depth: null });
   const delPlaylist = await db.deletePlaylist(playlist1.data.id);
   console.log(delPlaylist);

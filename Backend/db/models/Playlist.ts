@@ -1,7 +1,8 @@
 import { SchemaObject } from "neode";
 const playlistSchema: SchemaObject = {
   id: {
-    type: "uuid",
+    type: "string",
+    // type: "uuid",
     unique: true,
     primary: true,
   },

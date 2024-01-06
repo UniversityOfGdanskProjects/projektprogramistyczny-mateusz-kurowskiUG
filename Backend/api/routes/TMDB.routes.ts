@@ -4,7 +4,6 @@ const TMDBRouter = Router();
 
 TMDBRouter.get("/", async (req: Request, res: Response) => {
   res.send("Hello World!");
-  console.log(1);
 });
 TMDBRouter.get("/popular", async (req: Request, res: Response) => {
   const popular = await db.getTmdbMPopular();

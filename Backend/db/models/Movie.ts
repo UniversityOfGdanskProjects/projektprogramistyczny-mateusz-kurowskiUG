@@ -1,7 +1,8 @@
 import { SchemaObject } from "neode";
 const movieSchema: SchemaObject = {
   id: {
-    type: "uuid",
+    type: "string",
+    // type: "uuid",
     primary: true,
     unique: true,
   },
@@ -58,7 +59,6 @@ const movieSchema: SchemaObject = {
     direction: "in",
     properties: {
       name: "string",
-
     },
     cascade: "detach",
     eager: true,

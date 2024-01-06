@@ -1,7 +1,8 @@
 import { SchemaObject } from "neode";
 const userSchema: SchemaObject = {
   id: {
-    type: "uuid",
+    type: "string",
+    // type: "uuid",
     primary: true,
     unique: true,
   },
