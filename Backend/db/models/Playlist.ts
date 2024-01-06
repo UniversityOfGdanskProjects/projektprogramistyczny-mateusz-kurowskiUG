@@ -2,31 +2,31 @@ import { SchemaObject } from "neode";
 const playlistSchema: SchemaObject = {
   id: {
     type: "uuid",
-    primary: true,
     unique: true,
+    primary: true,
   },
   name: { type: "string", required: true },
-  date: { type: "date", required: true },
+  date: { type: "datetime", required: true },
   has: {
-    type: "relationships",
+    type: "nodes",
     target: "Movie",
     relationship: "HAS",
     direction: "out",
     properties: {
-      date: "date",
+      date: "datetime",
     },
     eager: true,
-    cascade: "delete",
+    cascade: "detach",
   },
   playlist: {
-    type: "relationships",
+    type: "node",
     target: "User",
     relationship: "PLAYLIST",
     direction: "in",
     properties: {
-      date: "date",
+      date: "datetime",
     },
-    cascade: "delete",
+    cascade: "detach",
     eager: true,
   },
 };

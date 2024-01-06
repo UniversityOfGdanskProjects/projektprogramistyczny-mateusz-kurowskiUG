@@ -1,5 +1,6 @@
 import GenreInterface from "./Genre";
 import MovieInterface from "./Movie";
+import PlaylistInterface from "./Playlist";
 import UserInterface from "./User";
 import { Watchlist, WatchlistInterface } from "./Watchlist";
 export interface DBResponse {
@@ -34,7 +35,8 @@ export interface GetWatchlistResponse {
   msg:
     | DBMessage.WATCHLIST_NOT_FOUND
     | DBMessage.WATCHLIST_FOUND
-    | DBMessage.WATCHLIST_EMPTY;
+    | DBMessage.WATCHLIST_EMPTY
+    | DBMessage.USER_NOT_FOUND;
   result: boolean;
   data: MovieInterface[] | undefined;
 }
@@ -54,7 +56,9 @@ export interface DeleteFromWatchlistResponse {
     | DBMessage.MOVIE_NOT_FOUND
     | DBMessage.MOVIE_UPDATED
     | DBMessage.MOVIE_NOT_UPDATED
-    | DBMessage.NOT_IN_WATCHLIST;
+    | DBMessage.NOT_IN_WATCHLIST
+    | DBMessage.USER_NOT_FOUND
+    | DBMessage.WATCHLIST_EMPTY;
   data: MovieInterface | undefined;
 }
 
@@ -86,6 +90,35 @@ export interface AddToWatchlistResponse {
     | DBMessage.WATCHLIST_NOT_UPDATED
     | DBMessage.ALREADY_IN_WATCHLIST;
   data: MovieInterface | undefined;
+}
+
+export interface CreatePlaylistResponse {
+  result: boolean;
+  msg:
+    | DBMessage.PLAYLIST_CREATED
+    | DBMessage.PLAYLIST_NOT_CREATED
+    | DBMessage.USER_NOT_FOUND
+    | DBMessage.INVALID_NAME;
+  data: PlaylistInterface | undefined;
+}
+
+export interface GetPlaylistsResponse {
+  result: boolean;
+  msg:
+    | DBMessage.PLAYLIST_NOT_FOUND
+    | DBMessage.PLAYLIST_FOUND
+    | DBMessage.USER_NOT_FOUND
+    | DBMessage.NO_PLAYLISTS;
+  data: PlaylistInterface[] | undefined;
+}
+
+export interface DeletePlaylistResponse {
+  result: boolean;
+  msg:
+    | DBMessage.PLAYLIST_NOT_FOUND
+    | DBMessage.PLAYLIST_DELETED
+    | DBMessage.PLAYLIST_NOT_DELETED;
+  data: PlaylistInterface | undefined;
 }
 
 export enum DBMessage {
@@ -127,4 +160,20 @@ export enum DBMessage {
   WATCHLIST_EMPTY = "Watchlist is empty",
   NOT_IN_WATCHLIST = "Movie not in watchlist",
   ALREADY_IN_WATCHLIST = "Movie already in watchlist",
+  PLAYLIST_CREATED = "Playlist created successfully",
+  PLAYLIST_NOT_CREATED = "Playlist not created",
+  PLAYLIST_DELETED = "Playlist deleted successfully",
+  PLAYLIST_NOT_DELETED = "Playlist not deleted",
+  PLAYLIST_UPDATED = "Playlist updated successfully",
+  PLAYLIST_NOT_UPDATED = "Playlist not updated",
+  PLAYLIST_NOT_FOUND = "Playlist not found",
+  PLAYLIST_FOUND = "Playlist found",
+  ALREADY_IN_PLAYLIST = "Movie already in playlist",
+  NOT_IN_PLAYLIST = "Movie not in playlist",
+  INVALID_PLAYLIST = "Invalid playlist",
+  INVALID_NAME = "Invalid name",
+  PLAYLISTS_FOUND = "Playlists found",
+  PLAYLISTS_NOT_FOUND = "Playlists not found",
+  PLAYLIST_EMPTY = "Playlist is empty",
+  NO_PLAYLISTS = "No playlists",
 }

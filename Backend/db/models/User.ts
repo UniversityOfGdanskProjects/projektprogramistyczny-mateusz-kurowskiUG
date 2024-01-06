@@ -16,15 +16,51 @@ const userSchema: SchemaObject = {
     unique: true,
   },
   watchlist: {
-    type: "relationship",
-    target: "Watchlist",
+    type: "nodes",
+    target: "Movie",
     relationship: "WATCHLIST",
     direction: "out",
     properties: {
-      name: "string",
+      date: "date",
     },
-    cascade: "delete",
     eager: true,
+    cascade: "delete",
+  },
+  playlist: {
+    type: "nodes",
+    target: "Playlist",
+    relationship: "PLAYLIST",
+    direction: "out",
+    properties: {
+      name: "string",
+      date: "date",
+    },
+    eager: true,
+    cascade: "delete",
+  },
+  reviewed: {
+    type: "relationships",
+    target: "Movie",
+    relationship: "REVIEWED",
+    direction: "out",
+    properties: {
+      content: "string",
+      rating: "number",
+      date: "date",
+    },
+    eager: true,
+    cascade: "detach",
+  },
+  watched: {
+    type: "relationships",
+    target: "Movie",
+    relationship: "WATCHED",
+    direction: "out",
+    properties: {
+      date: "date",
+    },
+    eager: true,
+    cascade: "detach",
   },
 };
 export default userSchema;
