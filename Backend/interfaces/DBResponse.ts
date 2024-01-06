@@ -2,12 +2,21 @@ import GenreInterface from "./Genre";
 import MovieInterface from "./Movie";
 import PlaylistInterface from "./Playlist";
 import UserInterface from "./User";
-import { Watchlist, WatchlistInterface } from "./Watchlist";
 export interface DBResponse {
   result: boolean;
   msg: DBMessage;
   code?: number;
   data?: object | object[];
+}
+export interface LoginResponse {
+  result: boolean;
+  msg:
+    | DBMessage.USER_LOGGED_IN
+    | DBMessage.USER_NOT_LOGGED_IN
+    | DBMessage.USER_NOT_FOUND
+    | DBMessage.INVALID_CREDIENTIALS;
+  data: UserInterface | undefined;
+  token?: object | undefined;
 }
 
 export interface UserCreationResponse {
@@ -17,18 +26,10 @@ export interface UserCreationResponse {
     | DBMessage.USER_NOT_CREATED
     | DBMessage.USER_EXISTS
     | DBMessage.USER_NOT_FOUND
+    | DBMessage.INVALID_CREDIENTIALS
     | DBMessage.INVALID_EMAIL
     | DBMessage.INVALID_PASSWORD;
   data: UserInterface | undefined;
-}
-
-export interface WatchlistCreationResponse {
-  result: boolean;
-  msg:
-    | DBMessage.WATCHLIST_CREATED
-    | DBMessage.WATCHLIST_NOT_CREATED
-    | DBMessage.WATCHLIST_NOT_FOUND;
-  data: WatchlistInterface | undefined;
 }
 
 export interface GetWatchlistResponse {
@@ -111,6 +112,15 @@ export interface GetPlaylistsResponse {
     | DBMessage.NO_PLAYLISTS;
   data: PlaylistInterface[] | undefined;
 }
+export interface GetPlaylistResponse {
+  result: boolean;
+  msg:
+    | DBMessage.PLAYLIST_NOT_FOUND
+    | DBMessage.PLAYLIST_FOUND
+    | DBMessage.USER_NOT_FOUND
+    | DBMessage.NO_PLAYLISTS;
+  data: PlaylistInterface | undefined;
+}
 
 export interface DeletePlaylistResponse {
   result: boolean;
@@ -121,6 +131,51 @@ export interface DeletePlaylistResponse {
   data: PlaylistInterface | undefined;
 }
 
+export interface RenamePlaylistResponse {
+  result: boolean;
+  msg:
+    | DBMessage.PLAYLIST_NOT_FOUND
+    | DBMessage.PLAYLIST_UPDATED
+    | DBMessage.PLAYLIST_NOT_UPDATED;
+  data: PlaylistInterface | undefined;
+}
+
+export interface UpdatePlaylistResponse {
+  result: boolean;
+  msg:
+    | DBMessage.PLAYLIST_NOT_FOUND
+    | DBMessage.PLAYLIST_UPDATED
+    | DBMessage.PLAYLIST_NOT_UPDATED;
+  data: PlaylistInterface | undefined;
+  renamed?: boolean;
+}
+export interface RemoveFromPlaylistResponse {
+  result: boolean;
+  msg:
+    | DBMessage.PLAYLIST_NOT_FOUND
+    | DBMessage.PLAYLIST_UPDATED
+    | DBMessage.PLAYLIST_NOT_UPDATED
+    | DBMessage.MOVIE_NOT_FOUND
+    | DBMessage.MOVIE_UPDATED
+    | DBMessage.MOVIE_NOT_UPDATED
+    | DBMessage.NOT_IN_PLAYLIST
+    | DBMessage.USER_NOT_FOUND
+    | DBMessage.PLAYLIST_EMPTY;
+  data: MovieInterface | undefined;
+}
+export interface AddToPlaylistResponse {
+  result: boolean;
+  msg:
+    | DBMessage.MOVIE_NOT_FOUND
+    | DBMessage.MOVIE_FOUND
+    | DBMessage.PLAYLIST_NOT_FOUND
+    | DBMessage.PLAYLIST_UPDATED
+    | DBMessage.USER_NOT_FOUND
+    | DBMessage.MOVIE_NOT_FOUND
+    | DBMessage.PLAYLIST_NOT_UPDATED
+    | DBMessage.ALREADY_IN_PLAYLIST;
+  data: MovieInterface | undefined;
+}
 export enum DBMessage {
   INVALID_QUERY = "Invalid query",
   USER_CREATED = "User created successfully",
@@ -139,6 +194,7 @@ export enum DBMessage {
   USER_NOT_AUTHORIZED = "User not authorized",
   INVALID_EMAIL = "Invalid email",
   INVALID_PASSWORD = "Invalid password",
+  INVALID_CREDIENTIALS = "Invalid credentials",
   WATCHLIST_CREATED = "Watchlist created successfully",
   WATCHLIST_FOUND = "Watchlist found",
   WATCHLIST_NOT_CREATED = "Watchlist not created",

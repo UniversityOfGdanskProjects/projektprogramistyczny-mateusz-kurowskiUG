@@ -1,29 +1,30 @@
-import Neode, { Model, Node, NodeCollection, Relationship } from "neode";
-import dotenv, { parse } from "dotenv";
+import Neode, { Model, Node, NodeCollection } from "neode";
+import dotenv from "dotenv";
 import Envs from "../interfaces/envs";
 import userSchema from "./models/User";
 import { v4 as uuidv4 } from "uuid";
 import newUserInterface from "../interfaces/newUser";
-// import UserInterface from "../interfaces/User";
 import { createHash, Hash } from "crypto";
 import {
-  DBResponse,
   DBMessage,
   UserCreationResponse,
   GetMovieResponse,
   GetGenresReponse,
-  WatchlistCreationResponse,
   MovieCreationResponse,
   GetWatchlistResponse,
   AddToWatchlistResponse,
   DeleteFromWatchlistResponse,
   CreatePlaylistResponse,
   GetPlaylistsResponse,
+  RenamePlaylistResponse,
+  GetPlaylistResponse,
+  AddToPlaylistResponse,
+  RemoveFromPlaylistResponse,
+  LoginResponse,
 } from "../interfaces/DBResponse";
 // import jwt from "jsonwebtoken";
 import { emailRegex, passwordRegex } from "../data/regex";
 import Axios from "axios";
-import watchlistSchema from "./models/Watchlist";
 import testMovies from "../data/movie_ids_test.json";
 import movieSchema from "./models/Movie";
 import playlistSchema from "./models/Playlist";
@@ -35,11 +36,9 @@ class Db {
   instance: Neode;
   envs: Envs;
   // models
-  users: Model<User>;
-  // watchlists: Model<Watchlist>;
-  movies: Model<Movie>;
-  reviews: Model<Review>;
-  playlists: Model<Playlist>;
+  users: Model<UserInterface>;
+  movies: Model<MovieInterface>;
+  playlists: Model<PlaylistInterface>;
 
   hash: Hash;
   emailRegex: RegExp = emailRegex;
@@ -60,7 +59,6 @@ class Db {
 
   async dropAll(): Promise<boolean> {
     this.users.deleteAll();
-    this.watchlists.deleteAll();
     this.movies.deleteAll();
     this.playlists.deleteAll();
     return true;
@@ -90,7 +88,6 @@ class Db {
   }
   loadModels() {
     this.users = this.instance.model("User", userSchema);
-    this.watchlists = this.instance.model("Watchlist", watchlistSchema);
     this.movies = this.instance.model("Movie", movieSchema);
     this.playlists = this.instance.model("Playlist", playlistSchema);
   }
@@ -155,11 +152,34 @@ class Db {
       name: "p1234",
       date: new Date(),
     };
-    const playlist = this.playlists.create(playlist12);
-    const inserted = await Promise.all([user1, user2, m1, m2, m3, playlist]);
-    const [newUser, newUser2, movie1R, movie2R, movie3, newPlaylist] = inserted;
+    const emptyPlaylist: PlaylistInterface = {
+      id: "b47fa852-dec5-408f-a7d7-f8ab62297611",
+      name: "emptyPlaylist",
+      date: new Date(),
+    };
+    const playlistCreate = this.playlists.create(playlist12);
+    const emptyPlaylistCreate = this.playlists.create(emptyPlaylist);
+
+    const [
+      newUser,
+      newUser2,
+      movie1R,
+      movie2R,
+      movie3,
+      newPlaylist,
+      emptyPlaylistR,
+    ] = await Promise.all([
+      user1,
+      user2,
+      m1,
+      m2,
+      m3,
+      playlistCreate,
+      emptyPlaylistCreate,
+    ]);
     newUser.relateTo(newPlaylist, "playlist", { date: new Date() });
-    return { u1, u2, movie1, movie2, movie3, playlist12 };
+    newUser.relateTo(emptyPlaylistR, "playlist", { date: new Date() });
+    return { u1, u2, movie1, movie2, movie3, playlist12, emptyPlaylist };
   }
 
   setUp() {
@@ -218,19 +238,36 @@ class Db {
     };
   }
 
-  async loginUser(email: string, password: string): Promise<DBResponse> {
+  async loginUser(email: string, password: string): Promise<LoginResponse> {
     const user = await (await this.users.all({ email })).first();
     if (!user) {
-      return { result: false, msg: "Wrong email or password" };
+      return {
+        result: false,
+        msg: DBMessage.USER_NOT_FOUND,
+        data: undefined,
+      };
     }
     if (user.get("password") !== this.hash.update(password).digest("hex")) {
-      return { result: false, msg: "Wrong email or password" };
+      return {
+        result: false,
+        msg: DBMessage.INVALID_CREDIENTIALS,
+        data: undefined,
+      };
     }
-    const userJson = await user.toJson();
-    return { result: true, data: userJson };
+    const userJson = await user.properties();
+    delete userJson.password;
+    return { result: true, msg: DBMessage.USER_LOGGED_IN, data: userJson };
   }
 
-  async createMovie(movie: Movie): Promise<MovieCreationResponse> {
+  async getMovieById(movieId: string): Promise<GetMovieResponse> {
+    const movie = await this.movies.find(movieId);
+    if (!movie)
+      return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
+    const movieJson = await movie.properties();
+    return { result: true, msg: DBMessage.MOVIE_FOUND, data: movieJson };
+  }
+
+  async createMovie(movie: MovieInterface): Promise<MovieCreationResponse> {
     const createdMovie = await this.movies.create(movie);
     if (!createdMovie)
       return {
@@ -242,7 +279,7 @@ class Db {
     return { result: true, data: movieJson, msg: DBMessage.MOVIE_CREATED };
   }
 
-  TmdbToMovie(tmdbMovie: Movie): MovieInterface {
+  TmdbToMovie(tmdbMovie: MovieInterface): MovieInterface {
     const movie: MovieInterface = {
       id: uuidv4(),
       title: tmdbMovie.title,
@@ -315,7 +352,7 @@ class Db {
     }
   }
 
-  async getMovie(movieId: string): Promise<Node<Movie>> {
+  async getMovie(movieId: string): Promise<Node<MovieInterface>> {
     const movie = await this.movies.find(movieId);
     return movie;
   }
@@ -485,7 +522,9 @@ class Db {
     const movies_rel: NodeCollection = await playlist.get("has");
     if (!movies_rel) return [];
     if (!movies_rel.length) return [];
-    const movies = movies_rel.map((rel: Node<Movie>) => rel.properties());
+    const movies = movies_rel.map((rel: Node<MovieInterface>) =>
+      rel.properties()
+    );
     return movies;
   }
 
@@ -508,7 +547,7 @@ class Db {
         data: [],
       };
     }
-    const playlists = playlists_rel.map((rel: Node<Playlist>) => {
+    const playlists = playlists_rel.map((rel: Node<PlaylistInterface>) => {
       const playlist = rel.properties();
       return playlist;
     });
@@ -533,13 +572,9 @@ class Db {
   }
 
   async addToPlaylist(
-    userId: string,
     playlistId: string,
     movieId: string
   ): Promise<AddToPlaylistResponse> {
-    const user = await this.users.find(userId);
-    if (!user)
-      return { result: false, msg: DBMessage.USER_NOT_FOUND, data: undefined };
     const playlist = await this.playlists.find(playlistId);
     if (!playlist)
       return {
@@ -557,7 +592,7 @@ class Db {
         msg: DBMessage.PLAYLIST_NOT_FOUND,
         data: undefined,
       };
-    const alreadyInPlaylist = await isInPlaylist.find(
+    const alreadyInPlaylist = isInPlaylist.find(
       (movie) => movie.properties().id === movieId
     );
     if (alreadyInPlaylist)
@@ -581,12 +616,53 @@ class Db {
   }
 
   async removeFromPlaylist(
-    userId: string,
     playlistId: string,
     movieId: string
-  ) {}
+  ): Promise<RemoveFromPlaylistResponse> {
+    const playlist = await this.playlists.find(playlistId);
+    if (!playlist)
+      return {
+        result: false,
+        msg: DBMessage.PLAYLIST_NOT_FOUND,
+        data: undefined,
+      };
+    const movie = await this.movies.find(movieId);
+    if (!movie)
+      return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
+    const isInPlaylist: NodeCollection = await playlist.get("has");
+    if (!isInPlaylist)
+      return {
+        result: false,
+        msg: DBMessage.PLAYLIST_NOT_FOUND,
+        data: undefined,
+      };
+    const alreadyInPlaylist = await isInPlaylist.find(
+      (movie) => movie.properties().id === movieId
+    );
+    if (!alreadyInPlaylist)
+      return {
+        result: false,
+        msg: DBMessage.NOT_IN_PLAYLIST,
+        data: undefined,
+      };
+    const related = await playlist.detachFrom(movie);
+    if (!related)
+      return {
+        result: false,
+        msg: DBMessage.PLAYLIST_NOT_UPDATED,
+        data: undefined,
+      };
+    return {
+      result: true,
+      msg: DBMessage.PLAYLIST_UPDATED,
+      data: movie.properties(),
+    };
+  }
 
-    async updatePlaylistName(playlistId: string, name: string) {
+  async renamePlaylist(
+    playlistId: string,
+    name: string
+  ): Promise<RenamePlaylistResponse> {
     const playlist = await this.playlists.find(playlistId);
     if (!playlist)
       return {
@@ -601,9 +677,14 @@ class Db {
         msg: DBMessage.PLAYLIST_NOT_UPDATED,
         data: undefined,
       };
-    }
+    return {
+      result: true,
+      msg: DBMessage.PLAYLIST_UPDATED,
+      data: playlist.properties(),
+    };
+  }
 
-  async getPlaylistById(playlistId: string) {
+  async getPlaylistById(playlistId: string): Promise<GetPlaylistResponse> {
     const playlist = await this.playlists.find(playlistId);
     if (!playlist)
       return {
@@ -611,6 +692,11 @@ class Db {
         msg: DBMessage.PLAYLIST_NOT_FOUND,
         data: undefined,
       };
+    return {
+      result: true,
+      msg: DBMessage.PLAYLIST_FOUND,
+      data: playlist.properties(),
+    };
   }
   async deletePlaylist(playlistId: string): Promise<DeletePlaylistResponse> {
     const playlist = await this.playlists.find(playlistId);
@@ -702,10 +788,17 @@ const db = new Db();
   // PLAYLISTS
   const playlist1 = await db.createPlaylist(u1.id, "playlist1");
   const playlist2 = await db.createPlaylist(u1.id, "playlist2");
-  const added1 = await db.addToPlaylist(u1.id, playlist12.id, movie1.id);
-  const added2 = await db.addToPlaylist(u1.id, playlist12.id, movie2.id);
-  const added3 = await db.addToPlaylist(u2.id, playlist2.data?.id, movie1.id);
-  const added4 = await db.addToPlaylist(u2.id, playlist2.data?.id, movie2.id);
+  const added1 = await db.addToPlaylist(playlist12.id, movie1.id);
+  const added2 = await db.addToPlaylist(playlist12.id, movie2.id);
+  const added3 = await db.addToPlaylist(playlist2.data?.id, movie1.id);
+  const added4 = await db.addToPlaylist(playlist2.data?.id, movie2.id);
+
+  const deletedFromPlaylist = await db.removeFromPlaylist(
+    playlist12.id,
+    movie1.id
+  );
+  console.log(deletedFromPlaylist);
+
   // console.log(added1);
   // console.log(added2);
 
@@ -714,8 +807,8 @@ const db = new Db();
 
   const playlists = await db.getPlaylists(u1.id);
   console.dir(playlists, { depth: null });
-  const delPlaylist = await db.deletePlaylist(playlist1.data.id);
-  console.log(delPlaylist);
+  // const delPlaylist = await db.deletePlaylist(playlist1.data.id);
+  // console.log(delPlaylist);
 
   // const playlists = await db.getPlaylists(newUser.data?.id);
   // console.log(playlists);
