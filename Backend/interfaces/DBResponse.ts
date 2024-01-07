@@ -219,6 +219,23 @@ export interface isReviewValidInterface {
     | DBMessage.USER_NOT_FOUND
     | DBMessage.REVIEW_VALID;
 }
+
+export interface MovieDeletionResponse {
+  result: boolean;
+  msg:
+    | DBMessage.MOVIE_NOT_FOUND
+    | DBMessage.MOVIE_DELETED
+    | DBMessage.MOVIE_NOT_DELETED;
+  data: MovieInterface | undefined;
+}
+export interface MovieUpdateResponse {
+  result: boolean;
+  msg:
+    | DBMessage.MOVIE_NOT_FOUND
+    | DBMessage.MOVIE_UPDATED
+    | DBMessage.MOVIE_NOT_UPDATED;
+  data: MovieInterface | undefined;
+}
 export enum DBMessage {
   REVIEWS_FOUND = "Reviews found",
   REVIEWS_NOT_FOUND = "Reviews not found",

@@ -25,6 +25,7 @@ import {
   isReviewValidInterface,
   GetReviewsResponse,
   DeleteReviewResponse,
+  MovieUpdateResponse,
 } from "../interfaces/DBResponse";
 // import jwt from "jsonwebtoken";
 import { emailRegex, passwordRegex } from "../data/regex";
@@ -36,6 +37,7 @@ import UserInterface from "../interfaces/User";
 import MovieInterface from "../interfaces/Movie";
 import PlaylistInterface from "../interfaces/Playlist";
 import { ReviewInterface } from "../interfaces/ReviewInterface";
+import { MovieUpdateInterface } from "../interfaces/MovieUpdate";
 
 class Db {
   instance: Neode;
@@ -208,18 +210,6 @@ class Db {
     this.loadModels();
   }
 
-  async getUsers(): Promise<UserInterface[]> {
-    const users = await this.users.all();
-    if (!users) return [];
-    const jsoned = await Promise.all(
-      users.map(async (user) => {
-        const json = await user.properties();
-        return json;
-      })
-    );
-    return jsoned;
-  }
-
   async createUser(user: newUserInterface): Promise<UserCreationResponse> {
     const id = uuidv4();
     if (!this.emailRegex.test(user.email)) {
@@ -252,6 +242,86 @@ class Db {
       msg: DBMessage.USER_CREATED,
     };
   }
+  //admin
+  async getUsers(): Promise<UserInterface[]> {
+    const users = await this.users.all();
+    if (!users) return [];
+    const jsoned = await Promise.all(
+      users.map(async (user) => {
+        const json = await user.properties();
+        return json;
+      })
+    );
+    return jsoned;
+  }
+  async updateUserRole(userId: string) {}
+  async createNewMovie({
+    title,
+    popularity,
+    release_date,
+    poster_path,
+    adult,
+    backdrop_path,
+    budget,
+    status,
+  }: {
+    title: string;
+    popularity: number;
+    release_date: string;
+    poster_path: string;
+    adult: boolean;
+    backdrop_path: string;
+    budget: number;
+    status: string;
+  }): Promise<MovieCreationResponse> {
+    const movie: MovieInterface = {
+      id: uuidv4(),
+      title,
+      popularity,
+      release_date,
+      poster_path,
+      adult,
+      backdrop_path,
+      budget,
+      status,
+    };
+    const createdMovie = await this.movies.create(movie);
+    if (!createdMovie)
+      return {
+        result: false,
+        msg: DBMessage.MOVIE_NOT_CREATED,
+        data: undefined,
+      };
+    const movieJson = await createdMovie.properties();
+    return { result: true, data: movieJson, msg: DBMessage.MOVIE_CREATED };
+  }
+
+  async updateMovie(
+    movieId: string,
+    update: MovieUpdateInterface
+  ): Promise<MovieUpdateResponse> {}
+
+  async deleteMovie(movieId: string): Promise<MovieDeletionResponse> {
+    if (!movieId)
+      return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
+    const movie = await this.movies.find(movieId);
+    if (!movie)
+      return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
+    const result = await movie.delete();
+    if (!result) {
+      return {
+        result: false,
+        msg: DBMessage.MOVIE_NOT_DELETED,
+        data: undefined,
+      };
+    }
+    return {
+      result: true,
+      msg: DBMessage.MOVIE_DELETED,
+      data: movie.properties(),
+    };
+  }
+  // admin
 
   async loginUser(email: string, password: string): Promise<LoginResponse> {
     const user = await (await this.users.all({ email })).first();
@@ -293,7 +363,6 @@ class Db {
     const movieJson = await createdMovie.toJson();
     return { result: true, data: movieJson, msg: DBMessage.MOVIE_CREATED };
   }
-
   TmdbToMovie(tmdbMovie: MovieInterface): MovieInterface {
     const movie: MovieInterface = {
       id: uuidv4(),
