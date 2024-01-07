@@ -192,7 +192,11 @@ export interface AddReviewResponse {
 }
 export interface GetReviewsResponse {
   result: boolean;
-  msg: DBMessage.MOVIE_NOT_FOUND | DBMessage.NO_REVIEWS;
+  msg:
+    | DBMessage.MOVIE_NOT_FOUND
+    | DBMessage.NO_REVIEWS
+    | DBMessage.REVIEWS_NOT_FOUND
+    | DBMessage.REVIEWS_FOUND;
   data: ReviewInterface[] | undefined;
 }
 export interface DeleteReviewResponse {
@@ -216,6 +220,8 @@ export interface isReviewValidInterface {
     | DBMessage.REVIEW_VALID;
 }
 export enum DBMessage {
+  REVIEWS_FOUND = "Reviews found",
+  REVIEWS_NOT_FOUND = "Reviews not found",
   REVIEW_VALID = "Review is valid.",
   INVALID_CONTENT = "Invalid content",
   INVALID_RATING = "Invalid rating",

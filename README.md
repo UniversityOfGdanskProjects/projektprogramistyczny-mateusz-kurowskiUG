@@ -13,3 +13,5 @@ Test Playlists ids:
 b47fa852-dec5-408f-a7d7-f8ab62297610
 b47fa852-dec5-408f-a7d7-f8ab62297611
 ^^empty^^
+test Reviews ids:
+7e927b9c-13a3-42ce-b802-e8efa9b12620

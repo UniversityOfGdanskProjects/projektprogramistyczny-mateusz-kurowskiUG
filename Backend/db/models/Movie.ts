@@ -58,7 +58,10 @@ const movieSchema: SchemaObject = {
     relationship: "REVIEWED",
     direction: "in",
     properties: {
-      name: "string",
+      id: "uuid",
+      content: "string",
+      rating: "number",
+      date: "date",
     },
     cascade: "detach",
     eager: true,

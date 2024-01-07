@@ -23,6 +23,8 @@ import {
   LoginResponse,
   AddReviewResponse,
   isReviewValidInterface,
+  GetReviewsResponse,
+  DeleteReviewResponse,
 } from "../interfaces/DBResponse";
 // import jwt from "jsonwebtoken";
 import { emailRegex, passwordRegex } from "../data/regex";
@@ -182,6 +184,14 @@ class Db {
       playlistCreate,
       emptyPlaylistCreate,
     ]);
+    const movie3Node = await this.movies.find(movie3.data?.id);
+    newUser2.relateTo(movie3Node, "reviewed", {
+      id: "7e927b9c-13a3-42ce-b802-e8efa9b12620",
+      userId: newUser2.properties().id,
+      movieId: movie3.data?.id,
+      content: "contentcontentcontent",
+      rating: 10,
+    });
     newUser.relateTo(newPlaylist, "playlist", { date: new Date() });
     newUser.relateTo(emptyPlaylistR, "playlist", { date: new Date() });
     return { u1, u2, movie1, movie2, movie3, playlist12, emptyPlaylist };
@@ -737,6 +747,22 @@ class Db {
     return { result: true, msg: DBMessage.REVIEW_VALID };
   }
 
+  async getReviewsByUser(
+    user: Node<UserInterface>
+  ): Promise<ReviewInterface[]> {
+    const reviews_rel: NodeCollection = await user.get("reviewed");
+    return await reviews_rel.map((review) => {
+      const movieId = review.endNode().properties().id;
+      const userId = review.startNode().properties().id;
+      const reviewObj = {
+        ...review.properties(),
+        movieId,
+        userId,
+      };
+      return reviewObj;
+    });
+  }
+
   async addReview({
     userId,
     movieId,
@@ -769,37 +795,18 @@ class Db {
     const movie = await this.movies.find(movieId);
     if (!movie)
       return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
-    const usersReviews: NodeCollection = await user.get("reviewed");
-    if (!usersReviews)
+    const usersReviews = await this.getReviewsByUser(user);
+    const alreadyReviewed = usersReviews.find(
+      (review) => review.movieId === movieId
+    );
+    if (alreadyReviewed)
       return {
         result: false,
-        msg: DBMessage.REVIEW_NOT_CREATED,
+        msg: DBMessage.ALREADY_REVIEWED,
         data: undefined,
       };
-
-    if (usersReviews.length) {
-      const alreadyReviewed = await usersReviews.find(async (review) => {
-        const reviewProps = review.properties();
-        const movie = await review.endNode();
-        console.log(await movie.toJson());
-
-        return movie.properties().id === movieId;
-      });
-      // console.log(alreadyReviewed.properties());
-
-      if (alreadyReviewed)
-        return {
-          result: false,
-          msg: DBMessage.ALREADY_REVIEWED,
-          data: undefined,
-        };
-    }
-    const create = await user.relateTo(movie, "reviewed", {
-      content: review.content,
-      rating: review.rating,
-      date: review.date,
-    });
-    if (!create)
+    const related = await user.relateTo(movie, "reviewed", review);
+    if (!related)
       return {
         result: false,
         msg: DBMessage.REVIEW_NOT_CREATED,
@@ -807,8 +814,67 @@ class Db {
       };
     return { result: true, msg: DBMessage.REVIEW_CREATED, data: review };
   }
-  async getReviewsByMovie() {}
-  async deleteReview() {}
+  async getReviewsByMovie(movieId: string): Promise<GetReviewsResponse> {
+    if (!movieId)
+      return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
+    const movie = await this.movies.find(movieId);
+    if (!movie)
+      return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
+    const reviews_rel: NodeCollection = await movie.get("reviewed");
+    if (!reviews_rel)
+      return {
+        result: false,
+        msg: DBMessage.REVIEWS_NOT_FOUND,
+        data: undefined,
+      };
+    const reviews = await reviews_rel.map((review) => {
+      const movieId = review.endNode().properties().id;
+      const userId = review.startNode().properties().id;
+      const reviewObj = {
+        ...review.properties(),
+        movieId,
+        userId,
+      };
+      return reviewObj;
+    });
+    return { result: true, msg: DBMessage.REVIEWS_FOUND, data: reviews };
+  }
+  async deleteReview(
+    movieId: string,
+    reviewId: string
+  ): Promise<DeleteReviewResponse> {
+    const reviewNotFound: DeleteReviewResponse = {
+      result: false,
+      msg: DBMessage.REVIEW_NOT_FOUND,
+      data: undefined,
+    };
+    if (!movieId || !reviewId) return reviewNotFound;
+    const movie = await this.movies.find(movieId);
+    if (!movie)
+      return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
+    const movieReviews = await this.getReviewsByMovie(movieId);
+    if (!movieReviews.result || !movieReviews.data) return reviewNotFound;
+    const reviewToDelete = movieReviews.data.find(
+      (review) => review.id === reviewId
+    );
+
+    if (!reviewToDelete) return reviewNotFound;
+    const user = await this.users.find(reviewToDelete.userId);
+    if (!user)
+      return { result: false, msg: DBMessage.USER_NOT_FOUND, data: undefined };
+    const result = await user.detachFrom(movie);
+    if (!result)
+      return {
+        result: false,
+        msg: DBMessage.REVIEW_NOT_DELETED,
+        data: undefined,
+      };
+    return {
+      result: true,
+      msg: DBMessage.REVIEW_DELETED,
+      data: reviewToDelete,
+    };
+  }
 }
 const db = new Db();
 
@@ -899,28 +965,55 @@ const db = new Db();
 
   const rename = await db.renamePlaylist(playlist12.id, "newName");
   // console.log(rename);
-
+  // REVIEWS
   const u1Reviews = await db.addReview({
     userId: u1.id,
     movieId: movie1.id,
     content: "contentasdsa",
     rating: 10,
   });
-  const u2Reviews = await db.addReview({
-    userId: u2.id,
-    movieId: movie1.id,
-    content: "contentasdsa",
-    rating: 10,
-  });
-  const u3Reviews = await db.addReview({
-    userId: u1.id,
-    movieId: movie2.id,
-    content: "contentasdsasasd",
-    rating: 1,
-  });
+  // const u2Reviews = await db.addReview({
+  //   userId: u2.id,
+  //   movieId: movie1.id,
+  //   content: "contentasdsa",
+  //   rating: 10,
+  // });
+  // const u3Reviews = await db.addReview({
+  //   userId: u1.id,
+  //   movieId: movie2.id,
+  //   content: "contentasdsasasd",
+  //   rating: 1,
+  // });
+  // const u4Reviews = await db.addReview({
+  //   userId: u2.id,
+  //   movieId: movie2.id,
+  //   content: "contentasdsasasd",
+  //   rating: 1,
+  // });
+  // const u5Reviews = await db.addReview({
+  //   userId: u2.id,
+  //   movieId: movie2.id,
+  //   content: "contentasdsasasd",
+  //   rating: 1,
+  // });
   // console.log(u1Reviews);
   // console.log(u2Reviews);
   // console.log(u3Reviews);
+  // console.log(u4Reviews);
+  // console.log(u5Reviews);
+  // const reviewsMovie2 = await db.getReviewsByMovie(movie2.id);
+  // console.log(reviewsMovie2);
+
+  // const reviewDelete1 = await db.deleteReview(movie1.id, u1Reviews.data?.id);
+  // const reviewDelete2 = await db.deleteReview(movie1.id, u2Reviews.data.id);
+  // const reviewDelete3 = await db.deleteReview(movie2.id, u3Reviews.data.id);
+  // const reviewDelete4 = await db.deleteReview(movie2.id, u4Reviews.data.id);
+  // const reviewDelete5 = await db.deleteReview(movie2.id, u5Reviews.data.id);
+  // console.log(reviewDelete1);
+  // console.log(reviewDelete2);
+  // console.log(reviewDelete3);
+  // console.log(reviewDelete4);
+  // console.log(reviewDelete5);
 })();
 
 export default db;
