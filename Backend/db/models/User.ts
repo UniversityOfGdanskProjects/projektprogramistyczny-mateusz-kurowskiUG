@@ -68,5 +68,13 @@ const userSchema: SchemaObject = {
     eager: true,
     cascade: "detach",
   },
+  preffers: {
+    type: "nodes",
+    target: "Genre",
+    relationship: "PREFERRS",
+    direction: "out",
+    eager: true,
+    cascade: "detach",
+  },
 };
 export default userSchema;

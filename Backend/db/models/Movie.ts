@@ -6,6 +6,11 @@ const movieSchema: SchemaObject = {
     primary: true,
     unique: true,
   },
+  TMDBId: {
+    type: "integer",
+    required: true,
+    unique: true,
+  },
   title: {
     type: "string",
     required: true,
@@ -25,21 +30,22 @@ const movieSchema: SchemaObject = {
   poster_path: {
     type: "string",
   },
-
+  ovierview: {
+    type: "string",
+  },
   adult: {
     type: "boolean",
     required: true,
   },
   backdrop_path: {
     type: "string",
+    allow: "",
   },
   budget: {
     type: "number",
-    required: true,
   },
   status: {
     type: "string",
-    required: true,
   },
   has: {
     type: "relationship",
@@ -62,6 +68,17 @@ const movieSchema: SchemaObject = {
       content: "string",
       rating: "number",
       date: "date",
+    },
+    cascade: "detach",
+    eager: true,
+  },
+  genre: {
+    type: "nodes",
+    target: "Genre",
+    relationship: "GENRE",
+    direction: "out",
+    properties: {
+      date: "datetime",
     },
     cascade: "detach",
     eager: true,

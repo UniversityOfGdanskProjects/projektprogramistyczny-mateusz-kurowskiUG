@@ -1,4 +1,4 @@
-import express, { Router } from "express";
+import express from "express";
 import cors from "cors";
 import usersRouter from "./routes/users.routes";
 import TMDBRouter from "./routes/TMDB.routes";
@@ -14,6 +14,7 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
+
 app.use("/api/users", usersRouter);
 app.use("/api/tmdb/movies", TMDBRouter);
 app.use("/api/watchlist", watchlistRouter);

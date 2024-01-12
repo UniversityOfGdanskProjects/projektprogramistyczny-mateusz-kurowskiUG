@@ -9,7 +9,6 @@ import {
   DBMessage,
   UserCreationResponse,
   GetMovieResponse,
-  GetGenresReponse,
   MovieCreationResponse,
   GetWatchlistResponse,
   AddToWatchlistResponse,
@@ -26,11 +25,14 @@ import {
   GetReviewsResponse,
   DeleteReviewResponse,
   MovieUpdateResponse,
+  GetGenresReponse,
+  DBResponse,
+  GetUserResponse,
+  UpdateUserProfileResponse,
 } from "../interfaces/DBResponse";
 // import jwt from "jsonwebtoken";
 import { emailRegex, passwordRegex } from "../data/regex";
-import Axios from "axios";
-import testMovies from "../data/movie_ids_test.json";
+import Axios, { AxiosResponse } from "axios";
 import movieSchema from "./models/Movie";
 import playlistSchema from "./models/Playlist";
 import UserInterface from "../interfaces/User";
@@ -38,6 +40,8 @@ import MovieInterface from "../interfaces/Movie";
 import PlaylistInterface from "../interfaces/Playlist";
 import { ReviewInterface } from "../interfaces/ReviewInterface";
 import { MovieUpdateInterface } from "../interfaces/MovieUpdate";
+import GenreInterface from "../interfaces/Genre";
+import genreSchema from "./models/Genre";
 
 class Db {
   instance: Neode;
@@ -46,6 +50,7 @@ class Db {
   users: Model<UserInterface>;
   movies: Model<MovieInterface>;
   playlists: Model<PlaylistInterface>;
+  genres: Model<GenreInterface>;
 
   hash: Hash;
   emailRegex: RegExp = emailRegex;
@@ -59,27 +64,66 @@ class Db {
     this.hash = createHash("sha256");
     this.getEnvs();
     this.setUp();
-    this.dropAll().then(() => {
-      this.loadTestMovies();
-    });
+    this.dropAll();
   }
 
   async dropAll(): Promise<boolean> {
     this.users.deleteAll();
     this.movies.deleteAll();
     this.playlists.deleteAll();
+    this.genres.deleteAll();
     return true;
   }
 
   async loadTestMovies(): Promise<boolean> {
-    const moviesIds = testMovies.map((movie) => movie.id);
-    moviesIds.forEach((id) => {
-      this.getTmdbMById(id).then(async (res) => {
-        const movie = this.TmdbToMovie(res.data);
-        await this.createMovie(movie);
-      });
+    const pages = 5;
+    const promises: Promise<AxiosResponse>[] = [];
+    const pagesArray = Array.from(Array(pages).keys()).map((i) => i + 1);
+    pagesArray.map((page) => {
+      const URL = `https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=${page}&sort_by=popularity.desc`;
+      const testMovies = Axios.get(URL, { headers: this.tmdbHeaders });
+      promises.push(testMovies);
     });
-    return true;
+    Promise.all(promises)
+      .then((res) => {
+        res.forEach((response) => {
+          const movies = response.data.results.forEach(
+            async (movie: MovieInterface) => {
+              const movieWithDetaisl = await this.getTMDBMovieDetails(movie.id);
+              const { genres }: { genres: { id: number; name: string }[] } =
+                movieWithDetaisl;
+              const movieNode = await this.movies.create(movieWithDetaisl);
+
+              genres.forEach(async ({ id }) => {
+                const genreNode = await this.genres.first("TMDBId", id);
+                if (!genreNode) {
+                  console.log("no genre node");
+                }
+                if (!movieNode) {
+                  console.log("no movie node");
+                }
+                await movieNode.relateTo(genreNode, "genre", {
+                  date: new Date(),
+                });
+              });
+            }
+          );
+        });
+      })
+      .catch((e) => console.log(e));
+  }
+  async getTMDBMovieDetails(id: number): Promise<MovieInterface> {
+    const URL = `https://api.themoviedb.org/3/movie/${id}?language=pl`;
+    try {
+      const movie = await Axios.get(URL, { headers: this.tmdbHeaders });
+      const movieDetails = movie.data;
+      const movieToAppend: MovieInterface & { genres: object[] } =
+        this.TmdbToMovie(movieDetails);
+      return movieToAppend;
+    } catch (e) {
+      console.log(e);
+      throw new Error("Unable to get movie details");
+    }
   }
 
   getEnvs() {
@@ -97,9 +141,16 @@ class Db {
     this.users = this.instance.model("User", userSchema);
     this.movies = this.instance.model("Movie", movieSchema);
     this.playlists = this.instance.model("Playlist", playlistSchema);
+    this.genres = this.instance.model("Genre", genreSchema);
   }
 
   async testData() {
+    const testGenre = await this.genres.create({
+      id: "fca4b1e4-2f59-4352-bd61-8b3bf804686e",
+      name: "testGenre",
+      TMDBId: 404,
+    });
+
     const u1 = {
       email: "email@mail.com",
       password: "Admin123.",
@@ -121,6 +172,8 @@ class Db {
       title: "title",
       // overview: tmdbMovie.overview || "",
       popularity: 1,
+      TMDBId: 10_000,
+
       release_date: "2021-01-01",
       poster_path: "path",
       adult: false,
@@ -131,6 +184,7 @@ class Db {
     const movie2 = {
       id: "b47fa852-dec5-408f-a7d7-f8ab62297608",
       title: "title",
+      TMDBId: 9999,
       // overview: tmdbMovie.overview || "",
       popularity: 1,
       release_date: "2021-01-01",
@@ -141,21 +195,26 @@ class Db {
       status: "status",
     };
 
-    const m1 = db.createMovie(movie1);
-    const m2 = db.createMovie(movie2);
+    const m1 = db.createMovie(movie1, testGenre.properties().id);
+    const m2 = db.createMovie(movie2, testGenre.properties().id);
 
-    const m3 = db.createMovie({
-      id: "b47fa852-dec5-408f-a7d7-f8ab62297609",
-      title: "title",
-      // overview: tmdbMovie.overview || "",
-      popularity: 1,
-      release_date: "2021-01-01",
-      poster_path: "path",
-      adult: false,
-      backdrop_path: "path",
-      budget: 1,
-      status: "status",
-    });
+    const m3 = db.createMovie(
+      {
+        id: "b47fa852-dec5-408f-a7d7-f8ab62297609",
+        title: "title",
+        // overview: tmdbMovie.overview || "",
+        popularity: 1,
+        release_date: "2021-01-01",
+        poster_path: "path",
+        TMDBId: 10_001,
+
+        adult: false,
+        backdrop_path: "path",
+        budget: 1,
+        status: "status",
+      },
+      testGenre.properties().id
+    );
     const playlist12: PlaylistInterface = {
       id: "b47fa852-dec5-408f-a7d7-f8ab62297610",
       name: "p1234",
@@ -199,6 +258,48 @@ class Db {
     return { u1, u2, movie1, movie2, movie3, playlist12, emptyPlaylist };
   }
 
+  async getGenres(): Promise<GetGenresReponse> {
+    const genres = await this.genres.all();
+    if (!genres)
+      return {
+        result: false,
+        msg: DBMessage.GENRES_FOUND,
+        data: undefined,
+      };
+    const genresJson = await Promise.all(
+      genres.map(async (genre) => {
+        const json = await genre.properties();
+        return json;
+      })
+    );
+    return { result: true, msg: DBMessage.GENRES_FOUND, data: genresJson };
+  }
+
+  async getMoviesByGenre(genreId: string): Promise<GetMovieResponse> {
+    const genre = await this.genres.find(genreId);
+    if (!genre)
+      return { result: false, msg: DBMessage.GENRE_NOT_FOUND, data: undefined };
+    const movies = await genre.get("movies");
+    if (!movies)
+      return { result: false, msg: DBMessage.MOVIES_NOT_FOUND, data: [] };
+    const moviesJson = movies.map((movie) => movie.properties());
+    return { result: true, msg: DBMessage.MOVIES_FOUND, data: moviesJson };
+  }
+
+  async watchedMovies(userId: string): Promise<GetMovieResponse> {
+    const user = await this.users.find(userId);
+    if (!user)
+      return { result: false, msg: DBMessage.USER_NOT_FOUND, data: undefined };
+    const watched = await user.get("watched");
+    if (!watched)
+      return { result: false, msg: DBMessage.MOVIES_NOT_FOUND, data: [] };
+    const movies = watched.map((movie) => movie.properties());
+    this.getMovie;
+    return { result: true, msg: DBMessage.MOVIES_FOUND, data: movies };
+  }
+
+  async getRecommendations(userId: string): Promise<GetMovieResponse> {}
+
   setUp() {
     // this.instance = new Neode(
     //   this.envs.NEO4J_URI,
@@ -206,8 +307,19 @@ class Db {
     //   this.envs.NEO4J_PASSWORD
     // );
     this.instance = new Neode("neo4j://localhost:7687", "neo4j", "test1234");
-
     this.loadModels();
+    this.loadTMDBGenres().then(() => {
+      this.loadTestMovies();
+    });
+  }
+
+  async getUserProfile(id: string): Promise<GetUserResponse> {
+    const user = await this.users.find(id);
+    if (!user)
+      return { result: false, msg: DBMessage.USER_NOT_FOUND, data: undefined };
+    const userJson = user.properties();
+    delete userJson.password;
+    return { result: true, msg: DBMessage.USER_FOUND, data: userJson };
   }
 
   async createUser(user: newUserInterface): Promise<UserCreationResponse> {
@@ -242,6 +354,54 @@ class Db {
       msg: DBMessage.USER_CREATED,
     };
   }
+
+  TmdbToMovie(tmdbMovie): MovieInterface {
+    const movie: MovieInterface = {
+      id: uuidv4(),
+      TMDBId: tmdbMovie.id,
+      title: tmdbMovie.title,
+      overview: tmdbMovie.overview,
+      popularity: tmdbMovie.popularity,
+      release_date: tmdbMovie.release_date,
+      poster_path: tmdbMovie.poster_path,
+      adult: tmdbMovie.adult,
+      backdrop_path: tmdbMovie.backdrop_path,
+      budget: tmdbMovie.budget,
+      status: tmdbMovie.status,
+      genres: tmdbMovie.genres || [],
+    };
+    return movie;
+  }
+  async getUserStats(id: string) {
+    return id;
+  }
+  async loadTMDBGenres(): Promise<GenreInterface[]> {
+    const URL = "https://api.themoviedb.org/3/genre/movie/list";
+    try {
+      const result = await (
+        await Axios.get(URL, { headers: this.tmdbHeaders })
+      ).data;
+      const genres = result.genres.map((genre) => {
+        const newGenre: GenreInterface = {
+          id: uuidv4(),
+          name: genre.name,
+          TMDBId: genre.id,
+        };
+        return this.genres.create(newGenre);
+      });
+      Promise.all(genres)
+        .then((res: Neode.Node<GenreInterface>[]) => {
+          console.log("Successfully loaded genres");
+          res;
+        })
+        .catch((err) => {
+          console.log("Genres downloaded, but not saved due to: ", err);
+        });
+    } catch (e) {
+      console.log("Unable to load genres from TMDB");
+    }
+  }
+
   //admin
   async getUsers(): Promise<UserInterface[]> {
     const users = await this.users.all();
@@ -254,7 +414,71 @@ class Db {
     );
     return jsoned;
   }
-  async updateUserRole(userId: string) {}
+
+  async updateUserProfile(
+    user: UserInterface
+  ): Promise<UpdateUserProfileResponse> {
+    const { id, password, email } = user;
+    const userToUpdate = await this.users.find(id);
+    const errors: DBMessage[] = [];
+    if (!userToUpdate)
+      return {
+        result: false,
+        errors: [...errors, DBMessage.USER_NOT_FOUND],
+        user: false,
+      };
+    if (password) {
+      if (!this.passwordRegex.test(password)) {
+        return {
+          result: false,
+          errors: [...errors, DBMessage.INVALID_PASSWORD],
+          user: undefined,
+        };
+      }
+      const hashedPassword = this.hash.update("password").digest("hex");
+
+      const passwordMatches = userToUpdate.get("password") === hashedPassword;
+      if (!passwordMatches) {
+        return {
+          result: false,
+          errors: [...errors, DBMessage.INVALID_PASSWORD],
+          user: undefined,
+        };
+      }
+      userToUpdate.update({ password: hashedPassword }).catch(() => {
+        errors.push(DBMessage.PASSWORD_NOT_UPDATED);
+      });
+
+      return {
+        result: true,
+        errors: DBMessage.USER_UPDATED,
+        user: userToUpdate.properties(),
+      };
+    }
+
+    if (email) {
+      if (!this.emailRegex.test(email)) {
+        return {
+          result: false,
+          errors: [...errors, DBMessage.INVALID_EMAIL],
+          user: undefined,
+        };
+      }
+      const emailUpdated = userToUpdate.update({ [email]: email }).catch(() => {
+        results.push(DBMessage.EMAIL_NOT_UPDATED);
+      });
+    }
+
+    if (!errors.length)
+      return {
+        result: false,
+        msg: DBMessage.USER_NOT_UPDATED,
+        data: undefined,
+      };
+    const userJson = updatedUser.properties();
+    delete userJson.password;
+    return { result: true, msg: DBMessage.USER_UPDATED, data: userJson };
+  }
   async createNewMovie({
     title,
     popularity,
@@ -264,6 +488,7 @@ class Db {
     backdrop_path,
     budget,
     status,
+    genreId,
   }: {
     title: string;
     popularity: number;
@@ -273,7 +498,12 @@ class Db {
     backdrop_path: string;
     budget: number;
     status: string;
+    genreId: string;
   }): Promise<MovieCreationResponse> {
+    const genre = await this.genres.find(genreId);
+    if (!genre)
+      return { result: false, msg: DBMessage.GENRE_NOT_FOUND, data: undefined };
+
     const movie: MovieInterface = {
       id: uuidv4(),
       title,
@@ -292,7 +522,12 @@ class Db {
         msg: DBMessage.MOVIE_NOT_CREATED,
         data: undefined,
       };
-    const movieJson = await createdMovie.properties();
+    const related = await createdMovie.relateTo(genre, "genre", {
+      date: new Date(),
+    });
+    console.log(related);
+
+    const movieJson = createdMovie.properties();
     return { result: true, data: movieJson, msg: DBMessage.MOVIE_CREATED };
   }
 
@@ -348,11 +583,20 @@ class Db {
     const movie = await this.movies.find(movieId);
     if (!movie)
       return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
+    const genres = await movie.get("genre");
+
     const movieJson = movie.properties();
-    return { result: true, msg: DBMessage.MOVIE_FOUND, data: movieJson };
+    return {
+      result: true,
+      msg: DBMessage.MOVIE_FOUND,
+      data: { ...movieJson, genres },
+    };
   }
 
-  async createMovie(movie: MovieInterface): Promise<MovieCreationResponse> {
+  async createMovie(
+    movie: MovieInterface,
+    genreId: string
+  ): Promise<MovieCreationResponse> {
     const createdMovie = await this.movies.create(movie);
     if (!createdMovie)
       return {
@@ -360,23 +604,21 @@ class Db {
         msg: DBMessage.MOVIE_NOT_CREATED,
         data: undefined,
       };
+    const genre = await this.genres.find(genreId);
+    if (!genre)
+      return { result: false, msg: DBMessage.GENRE_NOT_FOUND, data: undefined };
+    const related = await createdMovie.relateTo(genre, "genre", {
+      date: new Date(),
+    });
+    if (!related)
+      return {
+        result: false,
+        msg: DBMessage.MOVIE_NOT_CREATED,
+        data: undefined,
+      };
+
     const movieJson = await createdMovie.toJson();
     return { result: true, data: movieJson, msg: DBMessage.MOVIE_CREATED };
-  }
-  TmdbToMovie(tmdbMovie: MovieInterface): MovieInterface {
-    const movie: MovieInterface = {
-      id: uuidv4(),
-      title: tmdbMovie.title,
-      // overview: tmdbMovie.overview || "",
-      popularity: tmdbMovie.popularity,
-      release_date: tmdbMovie.release_date,
-      poster_path: tmdbMovie.poster_path,
-      adult: tmdbMovie.adult,
-      backdrop_path: tmdbMovie.backdrop_path,
-      budget: tmdbMovie.budget,
-      status: tmdbMovie.status,
-    };
-    return movie;
   }
 
   async getTmdbMPopular(): Promise<GetMovieResponse> {
@@ -386,13 +628,16 @@ class Db {
         headers: this.tmdbHeaders,
       });
 
-      const movies = popular.data.results.map((movie: MovieInterface) => {
-        return this.TmdbToMovie(movie);
+      const movies = popular.data.results.map(async (movie) => {
+        const movieWithDetails = this.getTMDBMovieDetails(movie.id);
+        return movieWithDetails;
       });
+      const settledMovies = await Promise.all(movies);
+
       return {
         result: true,
         msg: DBMessage.MOVIE_FOUND,
-        data: movies,
+        data: await settledMovies,
       };
     } catch (err) {
       return { result: false, msg: DBMessage.TMDB_API_ERROR, data: [] };
@@ -401,26 +646,32 @@ class Db {
   async getTmdbMById(id: number): Promise<GetMovieResponse> {
     const url = `https://api.themoviedb.org/3/movie/${id}`;
     try {
-      const details = await Axios.get(url, { headers: this.tmdbHeaders });
-      const movie = this.TmdbToMovie(details.data);
+      const movieDetails = (await Axios.get(url, { headers: this.tmdbHeaders }))
+        .data;
+      const movie: MovieInterface = {
+        id: uuidv4(),
+        title: movieDetails.title,
+        TMDBId: movieDetails.id,
+        overview: movieDetails.overview,
+        popularity: movieDetails.popularity,
+        release_date: movieDetails.release_date,
+        poster_path: movieDetails.poster_path
+          ? "https://image.tmdb.org/t/p/w500" + movieDetails.poster_path
+          : "",
+        adult: movieDetails.adult,
+        backdrop_path: movieDetails.backdrop_path
+          ? "https://image.tmdb.org/t/p/w500" + movieDetails.backdrop_path
+          : "",
+        budget: movieDetails.budget || 0,
+        status: movieDetails.status || "",
+        genres: movieDetails.genres || [],
+      };
       return { result: true, msg: DBMessage.MOVIE_FOUND, data: movie };
     } catch (err) {
       return { result: false, msg: DBMessage.TMDB_API_ERROR, data: undefined };
     }
   }
-  async getGenres(): Promise<GetGenresReponse> {
-    const url = "https://api.themoviedb.org/3/genre/movie/list?language=pl";
-    try {
-      const genres = await Axios.get(url, { headers: this.tmdbHeaders });
-      return {
-        result: true,
-        msg: DBMessage.GENRES_FOUND,
-        data: genres.data.genres,
-      };
-    } catch (err) {
-      return { result: false, msg: DBMessage.TMDB_API_ERROR, data: undefined };
-    }
-  }
+
   async searchTmdb(query: string): Promise<GetMovieResponse> {
     if (!query)
       return { result: false, msg: DBMessage.INVALID_QUERY, data: undefined };
@@ -438,6 +689,17 @@ class Db {
 
   async getMovie(movieId: string): Promise<Node<MovieInterface>> {
     const movie = await this.movies.find(movieId);
+    if (!movie)
+      return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
+    const genres = (await movie.get("genre")).map((genre) =>
+      genre.properties()
+    );
+    const movieJson = movie.properties();
+    return {
+      result: true,
+      msg: DBMessage.MOVIE_FOUND,
+      data: { ...movieJson, genres },
+    };
     return movie;
   }
   // WATCHLISTS

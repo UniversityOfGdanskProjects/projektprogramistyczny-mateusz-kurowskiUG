@@ -45,7 +45,10 @@ export interface GetWatchlistResponse {
 
 export interface MovieCreationResponse {
   result: boolean;
-  msg: DBMessage.MOVIE_CREATED | DBMessage.MOVIE_NOT_CREATED;
+  msg:
+    | DBMessage.MOVIE_CREATED
+    | DBMessage.MOVIE_NOT_CREATED
+    | DBMessage.GENRE_NOT_FOUND;
   data: MovieInterface | undefined;
 }
 
@@ -236,7 +239,27 @@ export interface MovieUpdateResponse {
     | DBMessage.MOVIE_NOT_UPDATED;
   data: MovieInterface | undefined;
 }
+export interface GetUserResponse {
+  result: boolean;
+  msg: DBMessage.USER_NOT_FOUND | DBMessage.USER_FOUND;
+  data: UserInterface | undefined;
+}
+export interface UpdateUserProfileResponse {
+  result: boolean;
+  errors: string[];
+  user: UserInterface | undefined | false;
+}
+
 export enum DBMessage {
+  PASSWORD_UPDATED = "Password updated successfully",
+  EMAIL_UPDATED = "Email updated successfully",
+  EMAIL_NOT_UPDATED = "Email not updated",
+  PASSWORD_NOT_UPDATED = "Password not updated",
+  UPDATED_SUCCESSFULLY = "Updated successfully",
+  INVALID_UPDATE = "Invalid update",
+  PARTIALLY_UPDATED = "Partially updated",
+  USER_FOUND = "User found",
+  GENRE_NOT_FOUND = "Genre not found",
   REVIEWS_FOUND = "Reviews found",
   REVIEWS_NOT_FOUND = "Reviews not found",
   REVIEW_VALID = "Review is valid.",
