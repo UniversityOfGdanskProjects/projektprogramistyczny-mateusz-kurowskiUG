@@ -19,18 +19,18 @@ function NavBar() {
     <div data-theme={theme} className="navbar justify-between bg-base-100">
       <div className="flex-1">
         <Link href={"/home"} className="btn btn-ghost text-xl">
-          <Image alt="tmdb-logo" src={tmdbLogo} width={100}></Image>
+          <Image alt="tmdb-logo" src={tmdbLogo} width={80}></Image>
         </Link>
       </div>
 
-      <div className="flex-none gap-2 w-80 justify-between">
+      <div className="flex-none gap-2">
         {loggedIn ? (
           <div className="form-control">
             <input
               type="text"
               placeholder="Search"
               onChange={handleSearch}
-              className="input input-bordered w-max md:w-auto"
+              className="input input-bordered w-9/12 self-end"
             />
           </div>
         ) : null}
@@ -45,12 +45,7 @@ function NavBar() {
               className="btn btn-ghost btn-circle avatar"
             >
               <div className="w-10 rounded-full">
-                <Image
-                  alt="Tailwind CSS Navbar component"
-                  src={avatar}
-                  width={40}
-                  height={40}
-                />
+                <Image alt="Avatar" src={avatar} width={40} height={40} />
               </div>
             </div>
 

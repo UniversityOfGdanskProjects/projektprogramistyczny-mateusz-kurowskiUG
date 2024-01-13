@@ -83,5 +83,17 @@ const movieSchema: SchemaObject = {
     cascade: "detach",
     eager: true,
   },
+  cast: {
+    type: "nodes",
+    target: "Cast",
+    relationship: "CAST",
+    direction: "in",
+    properties: {
+      character: "string",
+      job: "string",
+    },
+    cascade: "detach",
+    eager: true,
+  },
 };
 export default movieSchema;

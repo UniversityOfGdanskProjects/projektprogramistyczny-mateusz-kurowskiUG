@@ -7,6 +7,7 @@ import playlistsRouter from "./routes/playlists.routes";
 import moviesRouter from "./routes/movies.routes";
 import adminRouter from "./routes/admin.routes";
 import bodyParser from "body-parser";
+import castRouter from "./routes/cast.routes";
 
 const app = express();
 const port = 3000;
@@ -21,6 +22,7 @@ app.use("/api/watchlist", watchlistRouter);
 app.use("/api/playlists", playlistsRouter);
 app.use("/api/movies", moviesRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/cast", castRouter);
 
 app.get("/api/recommendations", (req, res) => {
   res.send("Hello World!");

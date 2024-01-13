@@ -42,6 +42,9 @@ import { ReviewInterface } from "../interfaces/ReviewInterface";
 import { MovieUpdateInterface } from "../interfaces/MovieUpdate";
 import GenreInterface from "../interfaces/Genre";
 import genreSchema from "./models/Genre";
+import { CastInterface } from "../interfaces/CastInterface";
+import castSchema from "./models/Cast";
+import axios from "axios";
 
 class Db {
   instance: Neode;
@@ -51,7 +54,7 @@ class Db {
   movies: Model<MovieInterface>;
   playlists: Model<PlaylistInterface>;
   genres: Model<GenreInterface>;
-
+  cast: Model<CastInterface>;
   hash: Hash;
   emailRegex: RegExp = emailRegex;
   passwordRegex: RegExp = passwordRegex;
@@ -72,6 +75,7 @@ class Db {
     this.movies.deleteAll();
     this.playlists.deleteAll();
     this.genres.deleteAll();
+    this.cast.deleteAll();
     return true;
   }
 
@@ -125,6 +129,37 @@ class Db {
       throw new Error("Unable to get movie details");
     }
   }
+  // async getTMDBMovieCast(tmdbId: number): Promise<CastInterface[]> {
+  //   const URL = `https://api.themoviedb.org/3/movie/${tmdbId}/credits`;
+  //   const movie = (await this.movies.all("TMDBId", tmdbId)).first();
+  //   if (!movie) {
+  //     return [];
+  //   }
+  //   try {
+  //     const results = await axios.get(URL, { headers: this.tmdbHeaders });
+  //     const cast: CastInterface[] = results.data.cast;
+  //     cast.forEach(async (castObject) => {
+  //       const castNode = (await this.cast.all("TMDBId", castObject.id)).first();
+  //       if (!castNode) {
+  //         const newCast: CastInterface = {
+  //           id: uuidv4(),
+  //           name: castObject.name,
+  //           tmdbId: castObject.id,
+  //           popularity: castObject.popularity,
+  //           profile_path: castObject.profile_path,
+  //         };
+  //         const createdCast = await this.cast.create(newCast);
+  //         await createdCast.relateTo(movie, "cast", {
+  //           character: castObject.character,
+  //         });
+  //       } else {
+  //         await castNode.relateTo(movie, "cast", {});
+  //       }
+  //     });
+  //   } catch (e) {
+  //     console.log(e);
+  //   }
+  // }
 
   getEnvs() {
     dotenv.config();
@@ -142,6 +177,7 @@ class Db {
     this.movies = this.instance.model("Movie", movieSchema);
     this.playlists = this.instance.model("Playlist", playlistSchema);
     this.genres = this.instance.model("Genre", genreSchema);
+    this.cast = this.instance.model("Cast", castSchema);
   }
 
   async testData() {
