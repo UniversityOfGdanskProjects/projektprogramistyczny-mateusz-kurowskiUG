@@ -7,23 +7,25 @@ import avatar from "./avatar.jpg";
 import loginContext from "../loginContext";
 import tmdbLogo from "../../tmdb-logo.svg";
 function NavBar() {
-  const { theme, loggedIn } = useContext(loginContext);
+  const { theme, loggedIn, handleLogout, handleSearch } =
+    useContext(loginContext);
   const links = ["home", "about", "contact"];
   return (
     <div data-theme={theme} className="navbar justify-between bg-base-100">
       <div className="flex-1">
         <a className="btn btn-ghost text-xl">
-          <Image src={tmdbLogo} width={100}></Image>
+          <Image alt="tmdb-logo" src={tmdbLogo} width={100}></Image>
         </a>
       </div>
 
-      <div className="flex-none gap-2">
+      <div className="flex-none gap-2 w-80 justify-between">
         {loggedIn ? (
           <div className="form-control">
             <input
               type="text"
               placeholder="Search"
-              className="input input-bordered w-24 md:w-auto"
+              onChange={handleSearch}
+              className="input input-bordered w-max md:w-auto"
             />
           </div>
         ) : null}
@@ -61,7 +63,7 @@ function NavBar() {
                 <a>Settings</a>
               </li>
               <li>
-                <a>Logout</a>
+                <a onClick={handleLogout}>Logout</a>
               </li>
             </ul>
           </div>

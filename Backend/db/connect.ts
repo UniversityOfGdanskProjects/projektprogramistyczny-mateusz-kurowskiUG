@@ -363,9 +363,13 @@ class Db {
       overview: tmdbMovie.overview,
       popularity: tmdbMovie.popularity,
       release_date: tmdbMovie.release_date,
-      poster_path: tmdbMovie.poster_path,
+      poster_path: tmdbMovie.poster_path
+        ? "https://image.tmdb.org/t/p/w500" + tmdbMovie.poster_path
+        : "",
       adult: tmdbMovie.adult,
-      backdrop_path: tmdbMovie.backdrop_path,
+      backdrop_path: tmdbMovie.backdrop_path
+        ? "https://image.tmdb.org/t/p/w500" + tmdbMovie.backdrop_path
+        : "",
       budget: tmdbMovie.budget,
       status: tmdbMovie.status,
       genres: tmdbMovie.genres || [],

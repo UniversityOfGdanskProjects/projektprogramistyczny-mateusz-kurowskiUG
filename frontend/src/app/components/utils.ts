@@ -8,7 +8,7 @@ export const registerInitialValues = {
   email: "",
   password: "",
   passwordConfirmation: "",
-  checkbox: true,
+  terms: false,
 };
 
 const passwordRegex = /^[a-z]{3,}$/;
@@ -16,9 +16,11 @@ const passwordRegex = /^[a-z]{3,}$/;
 const emailObject = Yup.string()
   .email("Invalid email address")
   .required("Email is required");
+
 const passwordObject = Yup.string()
   .required("Password is required")
   .matches(passwordRegex, "Password must match password regex");
+
 const passwordConfirmationObject = Yup.string().test(
   "passwords-match",
   "Passwords must match",
@@ -26,8 +28,9 @@ const passwordConfirmationObject = Yup.string().test(
     return this.parent.password === value;
   }
 );
-const checkboxObject = Yup.boolean().isTrue("Must Accept Terms and Conditions");
-
+const termsObject = Yup.boolean()
+  .oneOf([true], "Must Accept Terms")
+  .required("Must Accept Terms");
 export const loginSchema = Yup.object({
   email: emailObject,
   password: passwordObject,
@@ -36,5 +39,9 @@ export const registerSchema = Yup.object({
   email: emailObject,
   password: passwordObject,
   passwordConfirmation: passwordConfirmationObject,
-  confirmation: checkboxObject,
+  terms: termsObject,
 });
+
+export const handleSearch = (e) => {
+  if (e.target.value.length > 3) console.log(e.target.value);
+};

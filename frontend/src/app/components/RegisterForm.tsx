@@ -1,14 +1,15 @@
+"use client";
 import React from "react";
 import LogRegForm from "./LogRegForm";
 import LoginInput from "./LoginInput";
-import RegisterCheckbox from "./RegisterCheckbox";
+import FormCheckbox from "./RegisterCheckbox";
 
-function RegisterForm({ validationSchema, initialValues, handler }) {
+function RegisterForm({ validationSchema, initialValues, submitHandler }) {
   return (
     <LogRegForm
       validationSchema={validationSchema}
       initialValues={initialValues}
-      handler={handler}
+      submitHandler={submitHandler}
     >
       <LoginInput name="email" label="Email" placeholder="Email" type="email" />
       <LoginInput
@@ -23,7 +24,7 @@ function RegisterForm({ validationSchema, initialValues, handler }) {
         placeholder="Password"
         type="password"
       />
-      <RegisterCheckbox name="checkbox" label={"I accept the terms."} />
+      <FormCheckbox name={"terms"} label={"I accept the terms."} />
     </LogRegForm>
   );
 }

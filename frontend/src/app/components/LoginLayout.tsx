@@ -4,9 +4,8 @@ import loginContext from "../loginContext";
 import NavBar from "./NavBar";
 import Footer from "./Footer";
 import LoginForm from "./LoginForm";
-import LogRegForm from "./LogRegForm";
-import LoginInput from "./LoginInput";
 import {
+  handleSearch,
   loginInitialValues,
   loginSchema,
   registerInitialValues,
@@ -14,13 +13,28 @@ import {
 } from "./utils";
 import RegisterForm from "./RegisterForm";
 function Layout({ children }) {
-  //   const { loggedIn, theme } = useContext(loginContext);
   const [theme, setTheme] = useState("dark");
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(true);
   const [wantToLogin, setWantToLogin] = useState(false);
+  const handleLogin = () => {
+    setLoggedIn(true);
+  };
+  const handleRegister = () => {
+    setLoggedIn(true);
+  };
+  const handleLogout = () => {
+    setLoggedIn(false);
+  };
   return (
     <loginContext.Provider
-      value={{ loggedIn, theme, wantToLogin, setWantToLogin }}
+      value={{
+        loggedIn,
+        theme,
+        wantToLogin,
+        setWantToLogin,
+        handleLogout,
+        handleSearch,
+      }}
     >
       <NavBar />
       {loggedIn ? (
@@ -29,11 +43,13 @@ function Layout({ children }) {
         <LoginForm
           initialValues={loginInitialValues}
           validationSchema={loginSchema}
+          submitHandler={handleLogin}
         />
       ) : (
         <RegisterForm
           initialValues={registerInitialValues}
           validationSchema={registerSchema}
+          submitHandler={handleRegister}
         />
       )}
       <Footer />

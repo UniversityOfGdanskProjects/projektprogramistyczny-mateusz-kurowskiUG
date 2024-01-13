@@ -1,13 +1,14 @@
+"use client";
 import React from "react";
 import LogRegForm from "./LogRegForm";
 import LoginInput from "./LoginInput";
 
-function LoginForm({ validationSchema, initialValues, handler }) {
+function LoginForm({ validationSchema, initialValues, submitHandler }) {
   return (
     <LogRegForm
       validationSchema={validationSchema}
       initialValues={initialValues}
-      handler={handler}
+      submitHandler={submitHandler}
     >
       <LoginInput name="email" label="Email" placeholder="Email" type="email" />
       <LoginInput
