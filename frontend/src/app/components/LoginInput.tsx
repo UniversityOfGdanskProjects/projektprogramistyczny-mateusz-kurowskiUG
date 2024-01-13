@@ -2,7 +2,17 @@
 import { useField } from "formik";
 import React from "react";
 
-function LoginInput({ name, label, placeholder, type }) {
+function LoginInput({
+  name,
+  label,
+  placeholder,
+  type,
+}: {
+  name: string;
+  label: string;
+  placeholder: string;
+  type: string;
+}) {
   const [field, meta, helpers] = useField(name);
   return (
     <>
