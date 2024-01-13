@@ -12,6 +12,7 @@ function page() {
       >
         <InnerNavBar />
         <Popular />
+        
       </popularMoviesContext.Provider>
     </>
   );

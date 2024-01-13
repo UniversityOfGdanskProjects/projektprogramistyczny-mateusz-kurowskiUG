@@ -12,18 +12,23 @@ import {
   registerSchema,
 } from "./utils";
 import RegisterForm from "./RegisterForm";
+import { useRouter } from "next/navigation";
 function Layout({ children }) {
+  const router = useRouter();
   const [theme, setTheme] = useState("dark");
   const [loggedIn, setLoggedIn] = useState(true);
   const [wantToLogin, setWantToLogin] = useState(false);
   const handleLogin = () => {
     setLoggedIn(true);
+    router.push("/home");
   };
   const handleRegister = () => {
     setLoggedIn(true);
+    router.push("/home");
   };
   const handleLogout = () => {
     setLoggedIn(false);
+    router.push("/");
   };
   return (
     <loginContext.Provider
