@@ -1,9 +1,15 @@
 import React from "react";
-import MovieInterface from "./Movie.model";
+import MovieInterface from "../../../../interfaces/Movie.model";
 import Image from "next/image";
 import Link from "next/link";
 import plus18 from "/public/images/plus18.png";
-function PopularMovie({ movie }: { movie: MovieInterface }) {
+function PopularMovie({
+  movie,
+  popular,
+}: {
+  movie: MovieInterface;
+  popular: boolean;
+}) {
   const genres = movie.genres?.slice(0, 2).map((genre) => (
     <div
       key={crypto.randomUUID()}
@@ -37,9 +43,11 @@ function PopularMovie({ movie }: { movie: MovieInterface }) {
       <div className="card-body py-0 h-40">
         <h2 className="card-title text-center text-wrap text-base">
           {movie.title}
-          <div className="badge badge-secondary absolute top-0 right-0 text-xs">
-            Popular
-          </div>
+          {popular ? (
+            <div className="badge badge-secondary absolute top-0 right-0 text-xs">
+              Popular
+            </div>
+          ) : null}
         </h2>
         <div className="card-actions justify-center">{genres}</div>
       </div>

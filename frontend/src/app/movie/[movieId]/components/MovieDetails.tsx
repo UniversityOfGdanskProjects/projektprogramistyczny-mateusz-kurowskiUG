@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import React, { useContext, useEffect } from "react";
 import { movieContext } from "../../movieContext";
 import Image from "next/image";
-import MovieInterface from "@/app/home/components/Movie.model";
+import MovieInterface from "../../../../../interfaces/Movie.model";
 import Cast from "./Cast";
 import Reviews from "./Reviews";
 import AddReview from "./AddReview";
@@ -15,18 +15,19 @@ function MovieDetails({ movieId }: { movieId: string }) {
   useEffect(() => {
     const loadMovieDetails = async () => {
       const movie = await axios.get(
-        `http://localhost:3000/api/tmdb/movies/${movieId}`
+        `http://localhost:3000/api/movies/${movieId}`
       );
       const data = movie.data.data;
       return data;
     };
-    loadMovieDetails().then((res) => {
-      setMovie(res);
-    });
-    // .catch(() => {
-    //   router.push("/404");
-    // });
-  }, [movieId]);
+    loadMovieDetails()
+      .then((res) => {
+        setMovie(res);
+      })
+      .catch(() => {
+        router.push("/404");
+      });
+  }, []);
 
   return (
     <>
@@ -41,14 +42,14 @@ function MovieDetails({ movieId }: { movieId: string }) {
         <div className="movie absolute bottom-0 left-10 hover:opacity-0 transition ease-in-out duration-500">
           <Image
             src={movie.poster_path}
-            width={200}
-            height={200}
+            width={120}
+            height={120}
             alt={movie.title}
-            className="before:content-['esaasssssssss']  "
+            className="w-auto h-auto"
           />
           {movie.adult ? (
             <div className="fa18 absolute top-0 right-0">
-              <Image src={plus18} width={50} height={50} alt="18+"></Image>
+              <Image src={plus18} width={50} height={50} alt="18plus"></Image>
             </div>
           ) : null}
         </div>

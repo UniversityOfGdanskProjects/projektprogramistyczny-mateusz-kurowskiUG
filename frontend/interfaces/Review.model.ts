@@ -1,4 +1,4 @@
-interface Review {
+interface ReviewInterface {
   id: string;
   user_id: string;
   content: string;
@@ -7,4 +7,4 @@ interface Review {
   date: string;
   email: string;
 }
-export default Review;
+export default ReviewInterface;

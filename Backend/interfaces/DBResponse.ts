@@ -251,6 +251,7 @@ export interface UpdateUserProfileResponse {
 }
 
 export enum DBMessage {
+  MOVIES_NOT_FOUND = "Movies not found",
   PASSWORD_UPDATED = "Password updated successfully",
   EMAIL_UPDATED = "Email updated successfully",
   EMAIL_NOT_UPDATED = "Email not updated",

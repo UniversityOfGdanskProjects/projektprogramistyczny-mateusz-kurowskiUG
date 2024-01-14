@@ -3,7 +3,7 @@ import axios from "axios";
 import React, { useContext, useEffect } from "react";
 import PopularMovie from "./PopularMovie";
 import { popularMoviesContext } from "./PopularContext";
-import MovieInterface from "./Movie.model";
+import MovieInterface from "../../../../interfaces/Movie.model";
 function Popular() {
   const { popularMovies, setPopularMovies } = useContext(popularMoviesContext);
   useEffect(() => {
@@ -11,9 +11,16 @@ function Popular() {
       const popularResponse = await axios.get(
         "http://localhost:3000/api/tmdb/movies/popular/"
       );
+
       const popularMovies = popularResponse.data.data.map(
         (movie: MovieInterface) => {
-          return <PopularMovie key={crypto.randomUUID()} movie={movie} />;
+          return (
+            <PopularMovie
+              key={crypto.randomUUID()}
+              popular={true}
+              movie={movie}
+            />
+          );
         }
       );
       return popularMovies;
@@ -27,7 +34,9 @@ function Popular() {
       });
   }, []);
   return (
-    <div className="carousel gap-2 w-full overflow-auto">{popularMovies}</div>
+    <div className="carousel gap-2 w-full overflow-auto flex-1">
+      {popularMovies}
+    </div>
   );
 }
 

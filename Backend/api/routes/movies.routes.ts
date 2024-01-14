@@ -1,7 +1,37 @@
 import { Request, Response, Router } from "express";
 import db from "../../db/connect";
-import newUserInterface from "../../interfaces/newUser";
 const moviesRouter = Router();
+moviesRouter.get("/", async (req: Request, res: Response) => {
+  const movies = await db.getAllMovies();
+  if (!movies.result) {
+    return res.status(400).send(movies);
+  }
+  return res.status(200).send(movies);
+});
+moviesRouter.get("/page/:pageNumber", async (req: Request, res: Response) => {
+  const { pageNumber } = req.params;
+  const movies = await db.getAllMovies();
+  if (!movies.result) {
+    return res.status(400).send(movies);
+  }
+  const page = movies.data?.slice((+pageNumber - 1) * 10, +pageNumber * 10);
+  if (!page) {
+    return res.status(400).send({ result: false, message: "Invalid page" });
+  }
+  return res.status(200).send({ result: true, data: page });
+});
+moviesRouter.get("/:movieId", async (req: Request, res: Response) => {
+  const { movieId } = req.params;
+  if (!movieId) {
+    return res.status(400).send({ result: false, message: "Invalid movieId" });
+  }
+  const movie = await db.getMovieByTMDBId(+movieId);
+  if (!movie.result) {
+    return res.status(400).send(movie);
+  }
+  return res.status(200).send(movie);
+});
+
 moviesRouter.post("/:movieId/reviews", async (req: Request, res: Response) => {
   const { movieId } = req.params;
   if (!movieId) {
@@ -38,7 +68,7 @@ moviesRouter.get("/:movieId/reviews", async (req: Request, res: Response) => {
   if (!movieId) {
     return res.status(400).send({ result: false, message: "Invalid movieId" });
   }
-  const reviews = await db.getReviewsByMovie(movieId);
+  const reviews = await db.getReviewsByMovie(+movieId);
   if (!reviews.result) {
     return res.status(400).send(reviews);
   }

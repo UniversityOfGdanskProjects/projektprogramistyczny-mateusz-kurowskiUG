@@ -84,7 +84,7 @@ class Db {
     const promises: Promise<AxiosResponse>[] = [];
     const pagesArray = Array.from(Array(pages).keys()).map((i) => i + 1);
     pagesArray.map((page) => {
-      const URL = `https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=${page}&sort_by=popularity.desc`;
+      const URL = `https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=plS&page=${page}&sort_by=popularity.desc`;
       const testMovies = Axios.get(URL, { headers: this.tmdbHeaders });
       promises.push(testMovies);
     });
@@ -129,6 +129,21 @@ class Db {
       throw new Error("Unable to get movie details");
     }
   }
+  async getMovieByTMDBId(movieId: number) {
+    const movie = await this.movies.first("TMDBId", movieId);
+    if (!movie)
+      return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
+    const genres = (await movie.get("genre")).toJson();
+
+    const movieJson = movie.properties();
+    return {
+      result: true,
+      msg: DBMessage.MOVIE_FOUND,
+      data: { ...movieJson, genres },
+    };
+    return movie;
+  }
+
   // async getTMDBMovieCast(tmdbId: number): Promise<CastInterface[]> {
   //   const URL = `https://api.themoviedb.org/3/movie/${tmdbId}/credits`;
   //   const movie = (await this.movies.all("TMDBId", tmdbId)).first();
@@ -211,9 +226,11 @@ class Db {
       TMDBId: 10_000,
 
       release_date: "2021-01-01",
-      poster_path: "path",
+      poster_path:
+        "https://image.tmdb.org/t/p/original/pA4sNvcohTNPx3AhEEeIu8gSt7h.jpg",
       adult: false,
-      backdrop_path: "path",
+      backdrop_path:
+        "https://image.tmdb.org/t/p/original/pA4sNvcohTNPx3AhEEeIu8gSt7h.jpg",
       budget: 1,
       status: "status",
     };
@@ -224,9 +241,11 @@ class Db {
       // overview: tmdbMovie.overview || "",
       popularity: 1,
       release_date: "2021-01-01",
-      poster_path: "path",
+      poster_path:
+        "https://image.tmdb.org/t/p/original/pA4sNvcohTNPx3AhEEeIu8gSt7h.jpg",
       adult: false,
-      backdrop_path: "path",
+      backdrop_path:
+        "https://image.tmdb.org/t/p/original/pA4sNvcohTNPx3AhEEeIu8gSt7h.jpg",
       budget: 1,
       status: "status",
     };
@@ -241,11 +260,13 @@ class Db {
         // overview: tmdbMovie.overview || "",
         popularity: 1,
         release_date: "2021-01-01",
-        poster_path: "path",
+        poster_path:
+          "https://image.tmdb.org/t/p/original/pA4sNvcohTNPx3AhEEeIu8gSt7h.jpg",
         TMDBId: 10_001,
 
         adult: false,
-        backdrop_path: "path",
+        backdrop_path:
+          "https://image.tmdb.org/t/p/original/pA4sNvcohTNPx3AhEEeIu8gSt7h.jpg",
         budget: 1,
         status: "status",
       },
@@ -309,6 +330,23 @@ class Db {
       })
     );
     return { result: true, msg: DBMessage.GENRES_FOUND, data: genresJson };
+  }
+
+  async getAllMovies() {
+    const movies = await this.movies.all();
+    if (!movies)
+      return {
+        result: false,
+        msg: DBMessage.MOVIES_NOT_FOUND,
+        data: undefined,
+      };
+    const moviesJson = await Promise.all(
+      movies.map(async (movie) => {
+        const json = await movie.properties();
+        return json;
+      })
+    );
+    return { result: true, msg: DBMessage.MOVIES_FOUND, data: moviesJson };
   }
 
   async getMoviesByGenre(genreId: string): Promise<GetMovieResponse> {
@@ -400,11 +438,11 @@ class Db {
       popularity: tmdbMovie.popularity,
       release_date: tmdbMovie.release_date,
       poster_path: tmdbMovie.poster_path
-        ? "https://image.tmdb.org/t/p/w500" + tmdbMovie.poster_path
+        ? "https://image.tmdb.org/t/p/original" + tmdbMovie.poster_path
         : "",
       adult: tmdbMovie.adult,
       backdrop_path: tmdbMovie.backdrop_path
-        ? "https://image.tmdb.org/t/p/w500" + tmdbMovie.backdrop_path
+        ? "https://image.tmdb.org/t/p/original" + tmdbMovie.backdrop_path
         : "",
       budget: tmdbMovie.budget,
       status: tmdbMovie.status,
@@ -696,11 +734,11 @@ class Db {
         popularity: movieDetails.popularity,
         release_date: movieDetails.release_date,
         poster_path: movieDetails.poster_path
-          ? "https://image.tmdb.org/t/p/w500" + movieDetails.poster_path
+          ? "https://image.tmdb.org/t/p/original" + movieDetails.poster_path
           : "",
         adult: movieDetails.adult,
         backdrop_path: movieDetails.backdrop_path
-          ? "https://image.tmdb.org/t/p/w500" + movieDetails.backdrop_path
+          ? "https://image.tmdb.org/t/p/original" + movieDetails.backdrop_path
           : "",
         budget: movieDetails.budget || 0,
         status: movieDetails.status || "",
@@ -1124,11 +1162,12 @@ class Db {
     const reviews_rel: NodeCollection = await user.get("reviewed");
     return await reviews_rel.map((review) => {
       const movieId = review.endNode().properties().id;
-      const userId = review.startNode().properties().id;
+      const userObj = review.startNode().properties();
       const reviewObj = {
         ...review.properties(),
         movieId,
-        userId,
+        userId: userObj.id,
+        email: userObj.email,
       };
       return reviewObj;
     });
@@ -1185,10 +1224,10 @@ class Db {
       };
     return { result: true, msg: DBMessage.REVIEW_CREATED, data: review };
   }
-  async getReviewsByMovie(movieId: string): Promise<GetReviewsResponse> {
+  async getReviewsByMovie(movieId: number): Promise<GetReviewsResponse> {
     if (!movieId)
       return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
-    const movie = await this.movies.find(movieId);
+    const movie = await this.movies.first("TMDBId", movieId);
     if (!movie)
       return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
     const reviews_rel: NodeCollection = await movie.get("reviewed");
@@ -1200,11 +1239,12 @@ class Db {
       };
     const reviews = await reviews_rel.map((review) => {
       const movieId = review.endNode().properties().id;
-      const userId = review.startNode().properties().id;
+      const userId = review.startNode().properties();
       const reviewObj = {
         ...review.properties(),
         movieId,
-        userId,
+        userId: userId.id,
+        email: userId.email,
       };
       return reviewObj;
     });

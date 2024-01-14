@@ -4,6 +4,8 @@ import { Request, Response, Router } from "express";
 const castRouter = Router();
 castRouter.get("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
+  console.log(id);
+
   if (!req.params.id) {
     return res.status(400).send({ message: "Missing cast id" });
   }
@@ -18,9 +20,10 @@ castRouter.get("/:id", async (req: Request, res: Response) => {
         },
       }
     );
-    return res
-      .status(200)
-      .send({ message: "Cast found", cast: castRequest.data.cast });
+    const cast = castRequest.data.cast.filter((cast) => {
+      return cast.order <= 10;
+    });
+    return res.status(200).send({ message: "Cast found", cast });
   } catch (error) {
     return res.status(404).send({ message: "Cast not found", cast: [] });
   }
