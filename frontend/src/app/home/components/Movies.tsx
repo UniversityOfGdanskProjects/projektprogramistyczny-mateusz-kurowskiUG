@@ -25,14 +25,20 @@ function Movies() {
 
   const { allMovies, setAllMovies } = useContext(popularMoviesContext);
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="flex flex-wrap gap-3 flex-1">
       {/* <InfiniteScroll
         dataLength={allMovies.length}
         loader={"Loading..."}
         endMessage={"That's all"}
       > */}
       {allMovies.map((movie: MovieInterface) => (
-        <PopularMovie key={movie.id} movie={movie} popular={false} />
+        <PopularMovie
+          height="h-72"
+          width={"w-36"}
+          key={movie.id}
+          movie={movie}
+          popular={false}
+        />
       ))}
       {/* </InfiniteScroll> */}
     </div>

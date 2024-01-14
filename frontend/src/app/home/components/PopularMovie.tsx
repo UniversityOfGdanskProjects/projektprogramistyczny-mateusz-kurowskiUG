@@ -6,9 +6,13 @@ import plus18 from "/public/images/plus18.png";
 function PopularMovie({
   movie,
   popular,
+  width = "w-40",
+  height = "h-90",
 }: {
   movie: MovieInterface;
   popular: boolean;
+  width: string;
+  height: string;
 }) {
   const genres = movie.genres?.slice(0, 2).map((genre) => (
     <div
@@ -20,7 +24,9 @@ function PopularMovie({
   ));
 
   return (
-    <div className="card w-40 h-90 bg-base-100 shadow-xl relative carousel-item">
+    <div
+      className={`card ${width} ${height} bg-base-100 shadow-xl relative carousel-item`}
+    >
       <Link href={`/movie/${movie.TMDBId}`}>
         <figure>
           <Image
@@ -41,7 +47,7 @@ function PopularMovie({
         </figure>
       </Link>
       <div className="card-body py-0 h-40">
-        <h2 className="card-title text-center text-wrap text-base">
+        <h2 className="card-title my-auto text-center self-center text-wrap text-base">
           {movie.title}
           {popular ? (
             <div className="badge badge-secondary absolute top-0 right-0 text-xs">
@@ -49,7 +55,7 @@ function PopularMovie({
             </div>
           ) : null}
         </h2>
-        <div className="card-actions justify-center">{genres}</div>
+        <div className="card-actions flex flex-col items-center">{genres}</div>
       </div>
     </div>
   );

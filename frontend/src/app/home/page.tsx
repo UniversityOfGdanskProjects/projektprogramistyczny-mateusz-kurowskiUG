@@ -15,10 +15,12 @@ function page() {
       <popularMoviesContext.Provider
         value={{ popularMovies, setPopularMovies, allMovies, setAllMovies }}
       >
-        <InnerNavBar />
-        <Popular />
-        <FilterMovies />
-        <Movies />
+        <div className="flex flex-col gap-4 px-2">
+          <InnerNavBar />
+          <Popular />
+          <FilterMovies />
+          <Movies />
+        </div>
       </popularMoviesContext.Provider>
     </>
   );

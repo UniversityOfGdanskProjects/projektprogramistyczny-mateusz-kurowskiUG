@@ -9,10 +9,10 @@ import tmdbLogo from "../../tmdb-logo.svg";
 import { useRouter } from "next/navigation";
 function NavBar() {
   const router = useRouter();
-  const { theme, loggedIn, handleLogout, handleSearch } =
+  const { theme, loggedIn, handleLogout, handleSearch, user } =
     useContext(loginContext);
   const goToProfile = () => {
-    router.push("/profile");
+    router.push(`/profile/${user.userId}`);
   };
   const links = ["home", "about", "contact"];
   return (
