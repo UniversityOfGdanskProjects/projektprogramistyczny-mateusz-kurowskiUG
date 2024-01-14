@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import MovieInterface from "../../../../../interfaces/Movie.model";
 import Image from "next/image";

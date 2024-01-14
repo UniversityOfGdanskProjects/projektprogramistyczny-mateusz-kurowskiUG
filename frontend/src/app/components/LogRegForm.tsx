@@ -19,7 +19,11 @@ const LogRegForm = ({
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
-        onSubmit={submitHandler}
+        onSubmit={(values) => {
+          const email = values.email.toString();
+          const password = values.password.toString();
+          submitHandler(email, password);
+        }}
       >
         {(props: FormikProps<any>) => (
           <Form>

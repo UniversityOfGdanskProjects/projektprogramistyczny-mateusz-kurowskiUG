@@ -11,7 +11,8 @@ export const registerInitialValues = {
   terms: false,
 };
 
-const passwordRegex = /^[a-z]{3,}$/;
+export const passwordRegex =
+  /^(?=.*[A-Z])(?=.*[a-z])(?=.*[.!@#$%^&+=])(.{6,20})$/;
 
 const emailObject = Yup.string()
   .email("Invalid email address")

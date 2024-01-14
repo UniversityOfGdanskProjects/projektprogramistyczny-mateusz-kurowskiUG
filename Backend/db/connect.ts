@@ -45,6 +45,7 @@ import genreSchema from "./models/Genre";
 import { CastInterface } from "../interfaces/CastInterface";
 import castSchema from "./models/Cast";
 import axios from "axios";
+import bcrypt from "bcrypt";
 
 class Db {
   instance: Neode;
@@ -55,7 +56,7 @@ class Db {
   playlists: Model<PlaylistInterface>;
   genres: Model<GenreInterface>;
   cast: Model<CastInterface>;
-  hash: Hash;
+  salt: string;
   emailRegex: RegExp = emailRegex;
   passwordRegex: RegExp = passwordRegex;
   tmdbHeaders = {
@@ -64,7 +65,9 @@ class Db {
       "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJkYjAxMzkxMjUxNjBjMTQzYWE5ZmUzZDgwYTA1YzQ5ZCIsInN1YiI6IjY1N2Y3NzI5NTI4YjJlMDcyNDNiMGViZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.-96365PpSY8BgLFO7CRfNrx8NBk1mXLiI_ycHcSOsKU",
   };
   constructor() {
-    this.hash = createHash("sha256");
+    bcrypt.genSalt(10, (err, salt) => {
+      this.salt = salt;
+    });
     this.getEnvs();
     this.setUp();
     this.dropAll();
@@ -414,9 +417,7 @@ class Db {
     if (foundEmail) {
       return { result: false, msg: DBMessage.USER_EXISTS, data: undefined };
     }
-    const hashedPassword = createHash("sha256")
-      .update(user.password)
-      .digest("hex");
+    const hashedPassword = await bcrypt.hash(user.password, this.salt);
 
     const newUser = { ...user, id, password: hashedPassword, role: "user" };
     const createdUser = await this.users.create(newUser);
@@ -513,7 +514,7 @@ class Db {
           user: undefined,
         };
       }
-      const hashedPassword = this.hash.update("password").digest("hex");
+      const hashedPassword = await bcrypt.hash(password, this.salt);
 
       const passwordMatches = userToUpdate.get("password") === hashedPassword;
       if (!passwordMatches) {
@@ -645,7 +646,7 @@ class Db {
         data: undefined,
       };
     }
-    if (user.get("password") !== this.hash.update(password).digest("hex")) {
+    if (user.get("password") !== bcrypt.hashSync(password, this.salt)) {
       return {
         result: false,
         msg: DBMessage.INVALID_CREDIENTIALS,

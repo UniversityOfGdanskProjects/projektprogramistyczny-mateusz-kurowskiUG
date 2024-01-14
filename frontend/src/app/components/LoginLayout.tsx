@@ -16,18 +16,14 @@ import { useRouter } from "next/navigation";
 function Layout({ children }) {
   const router = useRouter();
   const [theme, setTheme] = useState("dark");
-  const [loggedIn, setLoggedIn] = useState(true);
+  const [loggedIn, setLoggedIn] = useState(false);
   const [wantToLogin, setWantToLogin] = useState(false);
-  const handleLogin = () => {
-    setLoggedIn(true);
-    router.push("/home");
-  };
-  const handleRegister = () => {
-    setLoggedIn(true);
-    router.push("/home");
-  };
+  const [user, setUser] = useState({});
   const handleLogout = () => {
     setLoggedIn(false);
+    localStorage.removeItem("userId");
+    localStorage.removeItem("email");
+    localStorage.removeItem("role");
     router.push("/");
   };
   return (
@@ -39,6 +35,9 @@ function Layout({ children }) {
         setWantToLogin,
         handleLogout,
         handleSearch,
+        setLoggedIn,
+        user,
+        setUser,
       }}
     >
       <NavBar />
@@ -48,13 +47,11 @@ function Layout({ children }) {
         <LoginForm
           initialValues={loginInitialValues}
           validationSchema={loginSchema}
-          submitHandler={handleLogin}
         />
       ) : (
         <RegisterForm
           initialValues={registerInitialValues}
           validationSchema={registerSchema}
-          submitHandler={handleRegister}
         />
       )}
       <Footer />

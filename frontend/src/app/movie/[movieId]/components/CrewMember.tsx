@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { CastInterface } from "../../../../../interfaces/Cast.model";
 import Image from "next/image";

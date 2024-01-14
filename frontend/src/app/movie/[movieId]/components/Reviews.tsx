@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useContext, useEffect } from "react";
 import { movieContext } from "../../movieContext";
 import MovieInterface from "../../../../../interfaces/Movie.model";

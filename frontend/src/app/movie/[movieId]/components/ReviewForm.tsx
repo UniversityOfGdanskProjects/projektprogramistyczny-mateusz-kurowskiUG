@@ -1,3 +1,5 @@
+"use client";
+
 import { Formik } from "formik";
 import React, { useContext } from "react";
 import { reviewInitialValues, reviewValidationSchema } from "./ReviewUtils";

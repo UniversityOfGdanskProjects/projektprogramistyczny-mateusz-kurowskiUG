@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useContext, useEffect } from "react";
 import { popularMoviesContext } from "./PopularContext";
 import axios from "axios";
