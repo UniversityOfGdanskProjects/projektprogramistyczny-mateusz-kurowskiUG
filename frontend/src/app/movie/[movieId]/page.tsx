@@ -12,6 +12,8 @@ function Page({ params }: { params: { movieId: string } }) {
   const [cast, setCast] = useState<CastInterface[]>([]);
   const [reviews, setReviews] = useState<ReviewInterface[]>([]);
   const [reviewed, setReviewed] = useState<boolean>(false);
+  const [inWatchlist, setInWatchlist] = useState<boolean>(false);
+  const [playlists, setPlaylists] = useState<boolean>(false);
   return (
     <movieContext.Provider
       value={{
@@ -24,6 +26,10 @@ function Page({ params }: { params: { movieId: string } }) {
         setReviews,
         reviewed,
         setReviewed,
+        inWatchlist,
+        setInWatchlist,
+        playlists,
+        setPlaylists,
       }}
     >
       <MovieDetails movieId={params.movieId} />

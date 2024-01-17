@@ -3,6 +3,7 @@ import { createContext } from "react";
 import MovieInterface from "../../../interfaces/Movie.model";
 import CastInterface from "../../../interfaces/Cast.model";
 import ReviewInterface from "../../../interfaces/Review.model";
+import PlaylistInterface from "../../../interfaces/Playlist.model";
 
 type TMovieContext = {
   movie: MovieInterface | null;
@@ -13,6 +14,10 @@ type TMovieContext = {
   reviews: ReviewInterface[] | null;
   setReviews: (reviews: ReviewInterface[]) => void;
   setReviewed: (reviewed: boolean) => void;
+  inWatchlist: boolean;
+  setInWatchlist: (inWatchlist: boolean) => void;
+  playlists: PlaylistInterface[] | null;
+  setPlaylists: (playlists: PlaylistInterface[]) => void;
 };
 
 export const movieContext = createContext<TMovieContext>({
@@ -24,4 +29,8 @@ export const movieContext = createContext<TMovieContext>({
   reviews: null,
   setReviews: (reviews: ReviewInterface[] | null) => {},
   setReviewed: (reviewed: boolean) => {},
+  inWatchlist: false,
+  setInWatchlist: (inWatchlist: boolean) => {},
+  playlists: null,
+  setPlaylists: (playlists: PlaylistInterface[]) => {},
 });

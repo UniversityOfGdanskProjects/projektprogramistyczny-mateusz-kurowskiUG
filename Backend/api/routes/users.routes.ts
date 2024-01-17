@@ -37,6 +37,7 @@ usersRouter.post("/register", async (req: Request, res: Response) => {
     return res.status(400).send({ msg: "User already exists" });
   }
   const { id, role } = registerResult.data;
+
   return res
     .status(200)
     .send({ msg: registerResult.msg, data: { id, email, role } });
@@ -48,7 +49,7 @@ usersRouter.post("/login", async (req: Request, res: Response) => {
     return res.status(400).json({ msg: "Please enter all fields" });
   }
   const loginResult = await db.loginUser(email.trim(), password.trim());
-  if (!loginResult) {
+  if (!loginResult || !loginResult.result) {
     return res.status(400).json({ msg: "User does not exist" });
   }
   return res.status(200).json(loginResult);
