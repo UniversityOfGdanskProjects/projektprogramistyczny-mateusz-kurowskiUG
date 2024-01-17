@@ -253,8 +253,8 @@ class Db {
       status: "status",
     };
 
-    const m1 = db.createMovie(movie1, testGenre.properties().id);
-    const m2 = db.createMovie(movie2, testGenre.properties().id);
+    const m1 = db.createMovie(movie1, [testGenre.properties().id]);
+    const m2 = db.createMovie(movie2, [testGenre.properties().id]);
 
     const m3 = db.createMovie(
       {
@@ -273,7 +273,7 @@ class Db {
         budget: 1,
         status: "status",
       },
-      testGenre.properties().id
+      [testGenre.properties().id]
     );
     const playlist12: PlaylistInterface = {
       id: "b47fa852-dec5-408f-a7d7-f8ab62297610",
@@ -495,9 +495,9 @@ class Db {
   }
 
   async updateUserProfile(
-    user: UserInterface
+    user: UserInterface & { new_password: string }
   ): Promise<UpdateUserProfileResponse> {
-    const { id, password, email } = user;
+    const { id, password, email, new_password } = user;
     const userToUpdate = await this.users.find(id);
     const errors: DBMessage[] = [];
     if (!userToUpdate)
@@ -516,6 +516,18 @@ class Db {
       }
       const hashedPassword = await bcrypt.hash(password, this.salt);
 
+      if (!this.emailRegex.test(email)) {
+        return {
+          result: false,
+          errors: [...errors, DBMessage.INVALID_EMAIL],
+          user: undefined,
+        };
+      } else {
+        const emailUpdated = await userToUpdate.update({ email }).catch(() => {
+          errors.push(DBMessage.EMAIL_NOT_UPDATED);
+        });
+      }
+
       const passwordMatches = userToUpdate.get("password") === hashedPassword;
       if (!passwordMatches) {
         return {
@@ -524,14 +536,24 @@ class Db {
           user: undefined,
         };
       }
-      userToUpdate.update({ password: hashedPassword }).catch(() => {
-        errors.push(DBMessage.PASSWORD_NOT_UPDATED);
-      });
-
+      if (new_password) {
+        if (!this.passwordRegex.test(new_password)) {
+          return {
+            result: false,
+            errors: [...errors, DBMessage.INVALID_PASSWORD],
+            user: undefined,
+          };
+        }
+        const hashedNewPassword = await bcrypt.hash(new_password, this.salt);
+        await userToUpdate.update({ password: hashedNewPassword }).catch(() => {
+          errors.push(DBMessage.PASSWORD_NOT_UPDATED);
+        });
+      }
+      const updatedUser = await this.users.find(id);
       return {
         result: true,
         errors: DBMessage.USER_UPDATED,
-        user: userToUpdate.properties(),
+        user: updatedUser.properties(),
       };
     }
 
@@ -610,10 +632,41 @@ class Db {
     return { result: true, data: movieJson, msg: DBMessage.MOVIE_CREATED };
   }
 
+  async updateMovieGenres(movieId: string, genres: string[]) {
+    const movie = await this.movies.find(movieId);
+    if (!movie)
+      return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
+    const genreNodes = await Promise.all(
+      genres.map(async (genreId) => {
+        const genre = await this.genres.find(genreId);
+        if (!genre)
+          return {
+            result: false,
+            msg: DBMessage.GENRE_NOT_FOUND,
+            data: undefined,
+          };
+        return genre;
+      })
+    );
+  }
+
   async updateMovie(
     movieId: string,
     update: MovieUpdateInterface
-  ): Promise<MovieUpdateResponse> {}
+  ): Promise<MovieUpdateResponse> {
+    const movie = await this.movies.find(movieId);
+    if (!movie)
+      return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
+    const updated = await movie.update(update);
+    if (!updated)
+      return {
+        result: false,
+        msg: DBMessage.MOVIE_NOT_UPDATED,
+        data: undefined,
+      };
+    const movieJson = updated.properties();
+    return { result: true, data: movieJson, msg: DBMessage.MOVIE_UPDATED };
+  }
 
   async deleteMovie(movieId: string): Promise<MovieDeletionResponse> {
     if (!movieId)
@@ -674,7 +727,7 @@ class Db {
 
   async createMovie(
     movie: MovieInterface,
-    genreId: string
+    genres: string[]
   ): Promise<MovieCreationResponse> {
     const createdMovie = await this.movies.create(movie);
     if (!createdMovie)
@@ -683,18 +736,25 @@ class Db {
         msg: DBMessage.MOVIE_NOT_CREATED,
         data: undefined,
       };
-    const genre = await this.genres.find(genreId);
-    if (!genre)
-      return { result: false, msg: DBMessage.GENRE_NOT_FOUND, data: undefined };
-    const related = await createdMovie.relateTo(genre, "genre", {
-      date: new Date(),
+    genres.forEach(async (genreId) => {
+      const genre = await this.genres.find(genreId);
+
+      if (!genre)
+        return {
+          result: false,
+          msg: DBMessage.GENRE_NOT_FOUND,
+          data: undefined,
+        };
+      const related = await createdMovie.relateTo(genre, "genre", {
+        date: new Date(),
+      });
+      if (!related)
+        return {
+          result: false,
+          msg: DBMessage.MOVIE_NOT_CREATED,
+          data: undefined,
+        };
     });
-    if (!related)
-      return {
-        result: false,
-        msg: DBMessage.MOVIE_NOT_CREATED,
-        data: undefined,
-      };
 
     const movieJson = await createdMovie.toJson();
     return { result: true, data: movieJson, msg: DBMessage.MOVIE_CREATED };

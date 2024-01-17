@@ -33,14 +33,13 @@ usersRouter.post("/register", async (req: Request, res: Response) => {
     password: password.trim(),
   };
   const registerResult = await db.createUser(newUser);
-  if (!registerResult.result) {
+  if (!registerResult.result || !registerResult.data) {
     return res.status(400).send({ msg: "User already exists" });
   }
-  console.log(registerResult.data);
-
+  const { id, role } = registerResult.data;
   return res
     .status(200)
-    .send({ msg: registerResult.msg, data: registerResult.data });
+    .send({ msg: registerResult.msg, data: { id, email, role } });
 });
 
 usersRouter.post("/login", async (req: Request, res: Response) => {
@@ -65,7 +64,7 @@ usersRouter.get("/profile/:id", async (req: Request, res: Response) => {
   return res.status(200).json(profileResult);
 });
 usersRouter.put("/profile", async (req: Request, res: Response) => {
-  const { id, name, password, email, role } = req.body;
+  const { id, name, password, email, role, new_password } = req.body;
   if (!id) return res.status(400).json({ msg: "Please enter userId" });
   if (!name && !password && !email) {
     return res.status(400).json({ msg: "Please enter all fields" });
@@ -75,6 +74,7 @@ usersRouter.put("/profile", async (req: Request, res: Response) => {
     password,
     email,
     role,
+    new_password,
   });
   if (role)
     return res.status(403).json({ msg: "Updating role is not permitted" });
