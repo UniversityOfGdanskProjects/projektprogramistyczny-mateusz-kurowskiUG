@@ -5,11 +5,11 @@ import ReviewForm from "./ReviewForm";
 import { movieContext } from "../../movieContext";
 
 function AddReview() {
-  const { reviews } = useContext(movieContext);
-  const alreadyReviewed = false;
+  const { reviews, reviewed } = useContext(movieContext);
+
   return (
     <>
-      {alreadyReviewed ? (
+      {reviewed ? (
         <div className="text-red-600 text-center">
           You have already reviewed this movie!
         </div>

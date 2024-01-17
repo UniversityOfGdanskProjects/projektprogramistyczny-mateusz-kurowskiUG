@@ -1,4 +1,4 @@
-export interface CastInterface {
+interface CastInterface {
   id: number;
   tmdbId: number;
   name: string;
@@ -7,3 +7,4 @@ export interface CastInterface {
   order: number;
   popularity: number;
 }
+export default CastInterface;

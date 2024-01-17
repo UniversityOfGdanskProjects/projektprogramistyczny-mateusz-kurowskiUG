@@ -19,15 +19,15 @@ function Primary({ movie }: { movie: MovieInterface }) {
       >
         <div className="movie absolute bottom-0 left-10 hover:opacity-0 transition ease-in-out duration-500">
           <Image
-            src={movie.poster_path}
+            src={movie.poster_path ? movie.poster_path : ""}
             width={120}
             height={120}
-            alt={movie.title}
+            alt={""}
             className="w-auto h-auto"
           />
           {movie.adult ? (
             <div className="fa18 absolute top-0 right-0">
-              <Image src={plus18} width={50} height={50} alt="18plus" />
+              <Image src={plus18} width={50} height={50} alt="plus18" />
             </div>
           ) : null}
         </div>

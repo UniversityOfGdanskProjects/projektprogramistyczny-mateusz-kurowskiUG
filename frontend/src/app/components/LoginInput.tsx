@@ -25,6 +25,7 @@ function LoginInput({
           placeholder={placeholder}
           type={type ? type : "text"}
           className="input input-bordered w-full max-w-xs"
+          autoComplete="off"
         />
         <div className="label">
           <span className="label-text-alt"></span>

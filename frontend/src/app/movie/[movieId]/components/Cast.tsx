@@ -11,9 +11,14 @@ function Cast() {
   useEffect(() => {
     const loadCast = async (): Promise<CastInterface[]> => {
       try {
-        const cast = (
-          await axios.get(`http://localhost:3000/api/cast/${movieId}`)
-        ).data.cast;
+        const cast = await axios.get(
+          `http://localhost:3000/api/cast/${movieId}`
+        );
+        if (cast.status === 200) {
+          return cast.data.cast;
+        } else {
+          return [];
+        }
         return cast;
       } catch (e) {
         return [];
@@ -24,7 +29,7 @@ function Cast() {
         setCast(res);
       })
       .catch((res) => {
-        setCast([{ id: 1, name: "a" }]);
+        setCast([]);
       });
   }, []);
   return (

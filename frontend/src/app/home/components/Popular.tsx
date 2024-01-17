@@ -1,12 +1,12 @@
 "use client";
 import axios from "axios";
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useLayoutEffect } from "react";
 import PopularMovie from "./PopularMovie";
 import { popularMoviesContext } from "./PopularContext";
 import MovieInterface from "../../../../interfaces/Movie.model";
 function Popular() {
   const { popularMovies, setPopularMovies } = useContext(popularMoviesContext);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const loadMovies = async () => {
       const popularResponse = await axios.get(
         "http://localhost:3000/api/tmdb/movies/popular/"

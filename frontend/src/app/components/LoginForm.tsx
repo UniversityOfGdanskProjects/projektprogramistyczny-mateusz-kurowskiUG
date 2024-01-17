@@ -14,19 +14,26 @@ function LoginForm({
   initialValues: Yup.StringSchema<string, Yup.AnyObject, undefined, "">;
 }) {
   const { setUser, setLoggedIn } = useContext(loginContext);
+  const error = "";
   const loginHandler = async (email, password) => {
-    const response = await axios.post("http://localhost:3000/api/users/login", {
-      email,
-      password,
-    });
-    if (response.status === 200) {
-      setLoggedIn(true);
-      setUser(response.data.data);
-      localStorage.setItem("userId", response.data.data.id);
-      localStorage.setItem("email", response.data.data.email);
-      localStorage.setItem("role", response.data.data.role);
-    } else {
-      alert("Wrong email or password");
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/api/users/login",
+        {
+          email,
+          password,
+        }
+      );
+      if (response.status === 200) {
+        setLoggedIn(true);
+        setUser(response.data.data);
+        localStorage.setItem("userId", response.data.data.id);
+        localStorage.setItem("email", response.data.data.email);
+        localStorage.setItem("role", response.data.data.role);
+        localStorage.setItem("loggedIn", "true");
+      }
+    } catch (error) {
+      alert("Wrong creds");
     }
   };
   return (
@@ -34,6 +41,7 @@ function LoginForm({
       validationSchema={validationSchema}
       initialValues={initialValues}
       submitHandler={loginHandler}
+      type={"Login"}
     >
       <>
         <LoginInput

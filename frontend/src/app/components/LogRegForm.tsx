@@ -8,11 +8,13 @@ const LogRegForm = ({
   validationSchema,
   initialValues,
   submitHandler,
+  type,
 }: {
   children: React.JSX.Element;
   validationSchema: Yup.ObjectSchema<any>;
   initialValues: Yup.StringSchema<string, Yup.AnyObject, undefined, "">;
   handler: () => void;
+  type: string;
 }) => {
   return (
     <div>
@@ -25,7 +27,7 @@ const LogRegForm = ({
           submitHandler(email, password);
         }}
       >
-        {(props: FormikProps<any>) => (
+        {(props: FormikProps<{ email: string; password: string }>) => (
           <Form>
             <div className="style flex flex-col items-center">
               {children}
@@ -36,7 +38,7 @@ const LogRegForm = ({
                   props.isValid ? "btn-primary" : "btn-secondary"
                 }`}
               >
-                Responsive
+                {type}
               </button>
             </div>
           </Form>

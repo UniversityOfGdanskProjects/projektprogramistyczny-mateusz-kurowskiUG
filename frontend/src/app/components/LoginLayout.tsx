@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import loginContext from "../loginContext";
 import NavBar from "./NavBar";
 import Footer from "./Footer";
@@ -18,12 +18,27 @@ function Layout({ children }) {
   const [theme, setTheme] = useState("dark");
   const [loggedIn, setLoggedIn] = useState(false);
   const [wantToLogin, setWantToLogin] = useState(false);
-  const [user, setUser] = useState({});
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    if (localStorage.getItem("loggedIn") === "true") {
+      setUser({
+        userId: localStorage.getItem("userId"),
+        email: localStorage.getItem("email"),
+        role: localStorage.getItem("role"),
+      });
+      setLoggedIn(true);
+      console.log(user);
+    }
+  }, []);
+
   const handleLogout = () => {
     setLoggedIn(false);
     localStorage.removeItem("userId");
     localStorage.removeItem("email");
     localStorage.removeItem("role");
+    localStorage.removeItem("loggedIn");
+    setUser(null);
     router.push("/");
   };
   return (

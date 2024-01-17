@@ -1,9 +1,9 @@
 interface ReviewInterface {
   id: string;
-  user_id: string;
+  userId: string;
   content: string;
   rating: number;
-  movie_id: string;
+  movieId: string;
   date: string;
   email: string;
 }

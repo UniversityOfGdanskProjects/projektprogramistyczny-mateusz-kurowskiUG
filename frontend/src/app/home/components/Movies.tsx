@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useLayoutEffect } from "react";
 import { popularMoviesContext } from "./PopularContext";
 import axios from "axios";
 import { log } from "console";
@@ -9,7 +9,7 @@ import PopularMovie from "./PopularMovie";
 import MovieInterface from "../../../../interfaces/Movie.model";
 
 function Movies() {
-  useEffect(() => {
+  useLayoutEffect(() => {
     const loadMovies = async () => {
       const res = await axios.get("http://localhost:3000/api/movies");
       return res.data.data;
@@ -28,11 +28,6 @@ function Movies() {
   const { allMovies, setAllMovies } = useContext(popularMoviesContext);
   return (
     <div className="flex flex-wrap gap-3 flex-1">
-      {/* <InfiniteScroll
-        dataLength={allMovies.length}
-        loader={"Loading..."}
-        endMessage={"That's all"}
-      > */}
       {allMovies.map((movie: MovieInterface) => (
         <PopularMovie
           height="h-72"
@@ -42,7 +37,6 @@ function Movies() {
           popular={false}
         />
       ))}
-      {/* </InfiniteScroll> */}
     </div>
   );
 }
