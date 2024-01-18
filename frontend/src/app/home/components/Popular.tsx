@@ -1,11 +1,11 @@
 "use client";
 import axios from "axios";
-import React, { useContext, useEffect, useLayoutEffect } from "react";
+import React, { useContext, useLayoutEffect } from "react";
 import PopularMovie from "./PopularMovie";
-import { popularMoviesContext } from "./PopularContext";
+import { homeContext } from "./HomeContext";
 import MovieInterface from "../../../../interfaces/Movie.model";
 function Popular() {
-  const { popularMovies, setPopularMovies } = useContext(popularMoviesContext);
+  const { popularMovies, setPopularMovies } = useContext(homeContext);
   useLayoutEffect(() => {
     const loadMovies = async () => {
       const popularResponse = await axios.get(
@@ -26,7 +26,7 @@ function Popular() {
       return popularMovies;
     };
     loadMovies()
-      .then((res) => {
+      .then((res: MovieInterface[]) => {
         setPopularMovies(res);
       })
       .catch((err) => {

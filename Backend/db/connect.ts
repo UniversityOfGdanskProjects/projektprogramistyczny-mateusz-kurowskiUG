@@ -893,7 +893,7 @@ class Db {
 
     if (!watchlist.length)
       return {
-        result: false,
+        result: true,
         msg: DBMessage.WATCHLIST_EMPTY,
         data: [],
       };
@@ -1021,13 +1021,13 @@ class Db {
     const playlists_rel: NodeCollection = await user.get("playlist");
     if (!playlists_rel)
       return {
-        result: false,
+        result: true,
         msg: DBMessage.NO_PLAYLISTS,
         data: [],
       };
     if (!playlists_rel.length) {
       return {
-        result: false,
+        result: true,
         msg: DBMessage.NO_PLAYLISTS,
         data: [],
       };
@@ -1038,7 +1038,7 @@ class Db {
     });
     if (!playlists)
       return {
-        result: false,
+        result: true,
         msg: DBMessage.PLAYLIST_NOT_FOUND,
         data: undefined,
       };

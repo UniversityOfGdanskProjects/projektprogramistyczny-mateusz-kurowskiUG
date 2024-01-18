@@ -13,8 +13,8 @@ watchlistRouter.post("/", async (req: Request, res: Response) => {
   }
   return res.status(200).json(watchlistResult);
 });
-watchlistRouter.get("/", async (req: Request, res: Response) => {
-  const { userId } = req.body;
+watchlistRouter.get("/:userId", async (req: Request, res: Response) => {
+  const { userId } = req.params;
   if (!userId) {
     return res.status(400).json({ msg: "Please enter all fields" });
   }

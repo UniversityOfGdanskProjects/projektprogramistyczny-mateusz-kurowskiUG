@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import loginContext from "../loginContext";
 import NavBar from "./NavBar";
 import Footer from "./Footer";
