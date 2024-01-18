@@ -4,9 +4,9 @@ import { movieContext } from "../../movieContext";
 import ListButton from "./ListButton";
 import loginContext from "@/app/loginContext";
 import axios from "axios";
+import PlaylistsModal from "./PlaylistsModal";
 function UserActions() {
-  const { inWatchlist, setInWatchlist, playlists, setPlaylists, movie } =
-    useContext(movieContext);
+  const { inWatchlist, setInWatchlist, movie } = useContext(movieContext);
   const { user } = useContext(loginContext);
 
   const addToWatchlist = async () => {
@@ -43,17 +43,11 @@ function UserActions() {
   };
   // TODO: PLAYLIST REDUCER??????????
   const showPlaylists = async () => {
-    const url = `http://localhost:3000/api/playlists/${user?.userId}`;
-    const request = await axios.get(url);
-    // add modal
+    document.getElementById("playlist-modal").showModal(); // const url = `http://localhost:3000/api/playlists/${user?.userId}`;
+    // const request = await axios.get(url);
   };
-  const addToPlaylist = () => {
-    const url = ``;
-  };
+
   const removeFromPlaylist = () => {};
-  const createPlaylist = () => {
-    const url = `http://localhost:3000/api/playlists/`;
-  };
 
   return (
     <div className="flex flex-col py-4 px-2 gap-2">
@@ -65,18 +59,19 @@ function UserActions() {
         />
       ) : (
         <ListButton
-          color="btn-primary"
+          color="bg-sea"
           fullHeart={false}
           onClick={addToWatchlist}
           text="Add to watchlist"
         />
       )}
       <ListButton
-        color="btn-secondary"
+        color="bg-navy"
         fullHeart={false}
         onClick={showPlaylists}
         text="Add to playlist"
       />
+      <PlaylistsModal />
     </div>
   );
 }

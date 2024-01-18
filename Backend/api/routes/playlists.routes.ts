@@ -15,6 +15,12 @@ playlistsRouter.post("/", async (req: Request, res: Response) => {
       .status(400)
       .json({ msg: "Please enter all fields", result: false });
   }
+  if (name.length < 3 || name.length > 20) {
+    return res.status(400).json({
+      msg: "Playlist name must be between 3 and 20 characters",
+      result: false,
+    });
+  }
   const watchlistResult = await db.createPlaylist(userId, name);
   if (!watchlistResult.result) {
     return res.status(400).json(watchlistResult);
