@@ -10,13 +10,16 @@ import axios from "axios";
 import { movieContext } from "../../movieContext";
 import loginContext from "@/app/loginContext";
 import PlaylistInterface from "../../../../../interfaces/Playlist.model";
+import { formContext } from "./formContext";
 function CreatePlaylistFormEmbedded() {
   const { setPlaylists } = useContext(movieContext);
   const { user } = useContext(loginContext);
+  const { status, setStatus } = useContext(formContext);
   const addNewPlaylist = async (
     values: TNewPlaylistFormType,
     helpers: FormikHelpers<TNewPlaylistFormType & { response: string }>
   ) => {
+    setStatus("Creating new playlist...");
     const url = "http://localhost:3000/api/playlists/";
     try {
       const request = await axios.post(url, {
@@ -26,15 +29,20 @@ function CreatePlaylistFormEmbedded() {
       if (request.status === 200) {
         setPlaylists((prevPlaylist: PlaylistInterface[]) => [
           ...prevPlaylist,
-          request.data.data,
+          { ...request.data.data, movies: [] },
         ]);
+        helpers.resetForm();
+        setStatus("New playlist created successfully!");
       } else {
         helpers.setErrors({
           response: "Unfortunately, we could not create a new playlist 😞",
         });
+        console.log(values, user?.userId);
       }
     } catch (error) {
-      console.log(error);
+      helpers.setErrors({
+        response: "Unfortunately, we could not create a new playlist 😞",
+      });
     }
   };
   return (
@@ -47,6 +55,7 @@ function CreatePlaylistFormEmbedded() {
         <Form>
           <p className="important-errors text-center">
             {errors.response ? errors.response : null}
+            {status ? status : null}
           </p>
           <LoginInput label="Name" name="name" type="text" placeholder="Name" />
           <button

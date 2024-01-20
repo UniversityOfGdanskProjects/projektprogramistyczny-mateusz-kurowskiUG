@@ -1,10 +1,9 @@
 import React from "react";
 import CreatePlaylistFormEmbedded from "./CreatePlaylistFormEmbedded";
-function AddPlaylistEmbedded() {
-  const createPlaylist = () => {
-    const url = `http://localhost:3000/api/playlists/`;
-  };
+import { formContext } from "./formContext";
 
+function AddPlaylistEmbedded() {
+  const [status, setStatus] = React.useState("");
   return (
     <div className="collapse bg-base-200">
       <input type="checkbox" />
@@ -12,7 +11,9 @@ function AddPlaylistEmbedded() {
         Create new playlist
       </div>
       <div className="collapse-content">
-        <CreatePlaylistFormEmbedded />
+        <formContext.Provider value={{ status, setStatus }}>
+          <CreatePlaylistFormEmbedded />
+        </formContext.Provider>
       </div>
     </div>
   );

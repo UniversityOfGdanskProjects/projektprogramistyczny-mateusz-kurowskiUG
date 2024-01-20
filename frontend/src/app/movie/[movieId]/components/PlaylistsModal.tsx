@@ -63,29 +63,33 @@ function PlaylistsModal() {
   return (
     <>
       <dialog id="playlist-modal" className="modal">
-        <div className="modal-box flex flex-col gap-1">
+        <div className="modal-box flex flex-col gap-1 overflow-y-auto">
           <h3 className="font-bold text-lg text-center">Your playlists:</h3>
-          {playlists && playlists.length ? (
-            playlists.sort(sortPlaylists).map((playlist: PlaylistInterface) => {
-              const inPlaylist = playlist.movies.some(
-                (movieInPlaylist) => movieInPlaylist.id === movie?.id
-              );
-              return (
-                <PlaylistElement
-                  inPlaylist={inPlaylist}
-                  movie={movie!}
-                  playlistHandler={setPlaylists}
-                  playlist={playlist}
-                  key={crypto.randomUUID()}
-                />
-              );
-            })
-          ) : (
-            <p className="text-center">No playlists yet</p>
-          )}
+          <div className="flex flex-col gap-2 overflow-y-auto h-96">
+            {playlists && playlists.length ? (
+              playlists
+                .sort(sortPlaylists)
+                .map((playlist: PlaylistInterface) => {
+                  const inPlaylist = playlist.movies.some(
+                    (movieInPlaylist) => movieInPlaylist.id === movie?.id
+                  );
+                  return (
+                    <PlaylistElement
+                      inPlaylist={inPlaylist}
+                      movie={movie!}
+                      playlistHandler={setPlaylists}
+                      playlist={playlist}
+                      key={crypto.randomUUID()}
+                    />
+                  );
+                })
+            ) : (
+              <p className="text-center">No playlists yet</p>
+            )}
+          </div>
           <AddPlaylistEmbedded />
         </div>
-        <form method="dialog" className="modal-backdrop">
+        <form method="dialog" className="modal-backdrop ">
           <button>close</button>
         </form>
       </dialog>

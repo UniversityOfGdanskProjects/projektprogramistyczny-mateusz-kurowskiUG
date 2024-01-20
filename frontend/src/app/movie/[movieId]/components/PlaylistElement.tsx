@@ -10,7 +10,7 @@ function PlaylistElement({
   movie,
 }: {
   playlist: PlaylistInterface;
-  playlistHandler: Function;
+  playlistHandler: (playlists: PlaylistInterface[]) => PlaylistInterface[];
   inPlaylist: boolean;
   movie: MovieInterface;
 }) {
