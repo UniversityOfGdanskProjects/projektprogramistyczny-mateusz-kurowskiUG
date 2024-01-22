@@ -13,7 +13,7 @@ adminRouter.get("/users", async (req: Request, res: Response) => {
   if (!users) return res.status(400).json(users);
   return res.status(200).send(users);
 });
-adminRouter.put("/users/:id", async (req: Request, res: Response) => {});
+
 adminRouter.post("/movies", async (req: Request, res: Response) => {
   const {
     title,
@@ -113,7 +113,7 @@ adminRouter.delete("/movies/:movieId", async (req: Request, res: Response) => {
       .status(400)
       .json({ result: false, msg: "Please enter all fields" });
   const movie = await db.deleteMovie(movieId);
-  if (!movie) return res.status(400).json(movie);
+  if (!movie || !movie.result) return res.status(400).json(movie);
   return res.status(200).send(movie);
 });
 export default adminRouter;

@@ -4,7 +4,6 @@ import Envs from "../interfaces/envs";
 import userSchema from "./models/User";
 import { v4 as uuidv4 } from "uuid";
 import newUserInterface from "../interfaces/newUser";
-import { createHash, Hash } from "crypto";
 import {
   DBMessage,
   UserCreationResponse,
@@ -26,9 +25,9 @@ import {
   DeleteReviewResponse,
   MovieUpdateResponse,
   GetGenresReponse,
-  DBResponse,
   GetUserResponse,
   UpdateUserProfileResponse,
+  MovieDeletionResponse,
 } from "../interfaces/DBResponse";
 // import jwt from "jsonwebtoken";
 import { emailRegex, passwordRegex } from "../data/regex";
@@ -44,7 +43,6 @@ import GenreInterface from "../interfaces/Genre";
 import genreSchema from "./models/Genre";
 import { CastInterface } from "../interfaces/CastInterface";
 import castSchema from "./models/Cast";
-import axios from "axios";
 import bcrypt from "bcrypt";
 
 class Db {
@@ -70,19 +68,26 @@ class Db {
     });
     this.getEnvs();
     this.setUp();
-    this.dropAll();
+    this.dropAll().then(() => {
+      this.testData().then((res) => {
+        console.log("loaded test data");
+      });
+    });
   }
 
   async dropAll(): Promise<boolean> {
-    this.users.deleteAll();
-    this.movies.deleteAll();
-    this.playlists.deleteAll();
-    this.genres.deleteAll();
-    this.cast.deleteAll();
-    return true;
+    Promise.all([
+      this.users.deleteAll(),
+      this.movies.deleteAll(),
+      this.playlists.deleteAll(),
+      this.genres.deleteAll(),
+      this.cast.deleteAll(),
+    ])
+      .then(() => console.log("Dropped all database"))
+      .catch(() => console.log("could not drop all db"));
   }
 
-  async loadTestMovies(): Promise<boolean> {
+  async loadTestMovies(): Promise<void> {
     const pages = 5;
     const promises: Promise<AxiosResponse>[] = [];
     const pagesArray = Array.from(Array(pages).keys()).map((i) => i + 1);
@@ -103,12 +108,7 @@ class Db {
 
               genres.forEach(async ({ id }) => {
                 const genreNode = await this.genres.first("TMDBId", id);
-                if (!genreNode) {
-                  console.log("no genre node");
-                }
-                if (!movieNode) {
-                  console.log("no movie node");
-                }
+                if (!genreNode) return;
                 await movieNode.relateTo(genreNode, "genre", {
                   date: new Date(),
                 });
@@ -128,7 +128,6 @@ class Db {
         this.TmdbToMovie(movieDetails);
       return movieToAppend;
     } catch (e) {
-      console.log(e);
       throw new Error("Unable to get movie details");
     }
   }
@@ -146,38 +145,6 @@ class Db {
     };
     return movie;
   }
-
-  // async getTMDBMovieCast(tmdbId: number): Promise<CastInterface[]> {
-  //   const URL = `https://api.themoviedb.org/3/movie/${tmdbId}/credits`;
-  //   const movie = (await this.movies.all("TMDBId", tmdbId)).first();
-  //   if (!movie) {
-  //     return [];
-  //   }
-  //   try {
-  //     const results = await axios.get(URL, { headers: this.tmdbHeaders });
-  //     const cast: CastInterface[] = results.data.cast;
-  //     cast.forEach(async (castObject) => {
-  //       const castNode = (await this.cast.all("TMDBId", castObject.id)).first();
-  //       if (!castNode) {
-  //         const newCast: CastInterface = {
-  //           id: uuidv4(),
-  //           name: castObject.name,
-  //           tmdbId: castObject.id,
-  //           popularity: castObject.popularity,
-  //           profile_path: castObject.profile_path,
-  //         };
-  //         const createdCast = await this.cast.create(newCast);
-  //         await createdCast.relateTo(movie, "cast", {
-  //           character: castObject.character,
-  //         });
-  //       } else {
-  //         await castNode.relateTo(movie, "cast", {});
-  //       }
-  //     });
-  //   } catch (e) {
-  //     console.log(e);
-  //   }
-  // }
 
   getEnvs() {
     dotenv.config();
@@ -207,13 +174,13 @@ class Db {
 
     const u1 = {
       email: "email@mail.com",
-      password: "Admin123.",
+      password: "Admin123!",
       id: "fca4b1e4-2f59-4352-bd61-8b3bf804686e",
       role: "admin",
     };
     const u2 = {
       email: "email@mail2.com",
-      password: "Admin123.",
+      password: "Admin123!",
       id: "4ff3819b-501d-458a-a335-c75ec2510a1e",
       role: "user",
     };
@@ -375,8 +342,6 @@ class Db {
     return { result: true, msg: DBMessage.MOVIES_FOUND, data: movies };
   }
 
-  async getRecommendations(userId: string): Promise<GetMovieResponse> {}
-
   setUp() {
     // this.instance = new Neode(
     //   this.envs.NEO4J_URI,
@@ -507,12 +472,13 @@ class Db {
         user: false,
       };
     if (password) {
-      if (!this.passwordRegex.test(password)) {
-        return {
+      if (!this.passwordRegex.test(new_password)) {
+        const res = {
           result: false,
-          errors: [...errors, DBMessage.INVALID_PASSWORD],
+          errors: [...errors, 1],
           user: undefined,
         };
+        return res;
       }
       const hashedPassword = await bcrypt.hash(password, this.salt);
 
@@ -523,9 +489,14 @@ class Db {
           user: undefined,
         };
       } else {
-        const emailUpdated = await userToUpdate.update({ email }).catch(() => {
-          errors.push(DBMessage.EMAIL_NOT_UPDATED);
-        });
+        const emailUpdated = await userToUpdate
+          .update({ email })
+          .catch(() => {
+            errors.push(DBMessage.EMAIL_NOT_UPDATED);
+          })
+          .then({ result: true, errors, user: undefined });
+        if (errors.length) return { result: false, errors, user: undefined };
+        return { result: true, errors, user: emailUpdated.properties() };
       }
 
       const passwordMatches = userToUpdate.get("password") === hashedPassword;
@@ -1350,142 +1321,6 @@ class Db {
 }
 const db = new Db();
 
-(async () => {
-  // await db.users.deleteAll();
-  // await db.watchlists.deleteAll();
-  // const users0 = await db.getUsers();
-  // console.log(users0);
-
-  //users
-
-  // const users = await db.getUsers();
-  // console.log(users);
-
-  //tmdbMovies
-  // const tmdbPopular = await db.getTmdbMPopular();
-  // console.log(tmdbPopular);
-
-  // const tmdbMovie = await db.getTmdbMById(22);
-  // console.log(tmdbMovie);
-
-  // const genres = await db.getGenres();
-  // console.log(genres);
-
-  // const search = await db.searchTmdb("matrix");
-  // console.log(search);
-
-  //movies
-
-  // watchlists
-  // const getWatchlist = await db.getWatchlist(newUser.data.id);
-  // console.log(getWatchlist);
-
-  const { u1, u2, movie1, movie2, movie3, playlist12 } = await db.testData();
-
-  const addedToWatchlist = await db.addToWatchlist(u1.id, movie1.id);
-  const addedToWatchlist2 = await db.addToWatchlist(u1.id, movie2.id);
-  const addedToWatchlist3 = await db.addToWatchlist(u2.id, movie1.id);
-  const addedToWatchlist4 = await db.addToWatchlist(u2.id, movie2.id);
-  const addedToWatchlist5 = await db.addToWatchlist(u2.id, movie2.id);
-  // console.log(addedToWatchlist);
-  // console.log(addedToWatchlist2);
-  // console.log(addedToWatchlist3);
-  // console.log(addedToWatchlist4);
-  // console.log(addedToWatchlist5);
-
-  // const watchlist1 = await db.getWatchlist(newUser.data.id);
-  // const watchlist2 = await db.getWatchlist(newUser2.data.id);
-  // const deleted = await db.deleteFromWatchlist(newUser.data.id, movie.data.id);
-  // const deleted2 = await db.deleteFromWatchlist(
-  //   newUser2.data.id,
-  //   movie2.data.id
-  // );
-  // const deleted3 = await db.deleteFromWatchlist(newUser.data.id, "asdasd");
-  // const watchlist3 = await db.getWatchlist(newUser.data.id);
-  // const watchlist4 = await db.getWatchlist(newUser2.data.id);
-  // console.log(watchlist1);
-  // console.log(watchlist2);
-  // console.log(watchlist3);
-  // console.log(watchlist4);
-  // console.log(deleted);
-  // console.log(deleted2);
-  // console.log(deleted3);
-
-  // console.log(deleted);
-  // console.log(watchlistMovies);
-  // PLAYLISTS
-  const playlist1 = await db.createPlaylist(u1.id, "playlist1");
-  const playlist2 = await db.createPlaylist(u1.id, "playlist2");
-  const added1 = await db.addToPlaylist(playlist12.id, movie1.id);
-  const added2 = await db.addToPlaylist(playlist12.id, movie2.id);
-  const added3 = await db.addToPlaylist(playlist2.data?.id, movie1.id);
-  const added4 = await db.addToPlaylist(playlist2.data?.id, movie2.id);
-
-  const deletedFromPlaylist = await db.removeFromPlaylist(
-    playlist12.id,
-    movie1.id
-  );
-  // console.log(deletedFromPlaylist);
-
-  const playlists = await db.getPlaylists(u1.id);
-  // console.dir(playlists, { depth: null });
-  // const delPlaylist = await db.deletePlaylist(playlist1.data.id);
-  // console.log(delPlaylist);
-
-  // const playlists = await db.getPlaylists(newUser.data?.id);
-  // console.log(playlists);
-
-  const rename = await db.renamePlaylist(playlist12.id, "newName");
-  // console.log(rename);
-  // REVIEWS
-  const u1Reviews = await db.addReview({
-    userId: u1.id,
-    movieId: movie1.id,
-    content: "contentasdsa",
-    rating: 10,
-  });
-  // const u2Reviews = await db.addReview({
-  //   userId: u2.id,
-  //   movieId: movie1.id,
-  //   content: "contentasdsa",
-  //   rating: 10,
-  // });
-  // const u3Reviews = await db.addReview({
-  //   userId: u1.id,
-  //   movieId: movie2.id,
-  //   content: "contentasdsasasd",
-  //   rating: 1,
-  // });
-  // const u4Reviews = await db.addReview({
-  //   userId: u2.id,
-  //   movieId: movie2.id,
-  //   content: "contentasdsasasd",
-  //   rating: 1,
-  // });
-  // const u5Reviews = await db.addReview({
-  //   userId: u2.id,
-  //   movieId: movie2.id,
-  //   content: "contentasdsasasd",
-  //   rating: 1,
-  // });
-  // console.log(u1Reviews);
-  // console.log(u2Reviews);
-  // console.log(u3Reviews);
-  // console.log(u4Reviews);
-  // console.log(u5Reviews);
-  // const reviewsMovie2 = await db.getReviewsByMovie(movie2.id);
-  // console.log(reviewsMovie2);
-
-  // const reviewDelete1 = await db.deleteReview(movie1.id, u1Reviews.data?.id);
-  // const reviewDelete2 = await db.deleteReview(movie1.id, u2Reviews.data.id);
-  // const reviewDelete3 = await db.deleteReview(movie2.id, u3Reviews.data.id);
-  // const reviewDelete4 = await db.deleteReview(movie2.id, u4Reviews.data.id);
-  // const reviewDelete5 = await db.deleteReview(movie2.id, u5Reviews.data.id);
-  // console.log(reviewDelete1);
-  // console.log(reviewDelete2);
-  // console.log(reviewDelete3);
-  // console.log(reviewDelete4);
-  // console.log(reviewDelete5);
-})();
+(async () => {})();
 
 export default db;

@@ -15,3 +15,9 @@ b47fa852-dec5-408f-a7d7-f8ab62297611
 ^^empty^^
 test Reviews ids:
 7e927b9c-13a3-42ce-b802-e8efa9b12620
+
+docker-start Neo4j:
+docker run \
+ --publish=7474:7474 --publish=7687:7687 \
+ --volume=$HOME/neo4j/data:/data \
+ neo4j
