@@ -19,6 +19,8 @@ function Layout({ children }) {
   const [loggedIn, setLoggedIn] = useState(false);
   const [wantToLogin, setWantToLogin] = useState(false);
   const [user, setUser] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
 
   useEffect(() => {
     if (localStorage.getItem("loggedIn") === "true") {
@@ -53,6 +55,10 @@ function Layout({ children }) {
         setLoggedIn,
         user,
         setUser,
+        searchTerm,
+        setSearchTerm,
+        searchResults,
+        setSearchResults,
       }}
     >
       <NavBar />

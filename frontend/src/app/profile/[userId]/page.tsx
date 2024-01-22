@@ -20,7 +20,7 @@ function Page() {
     >
       <div>
         <ProfileInfo />
-        <FilterAndSortWatchlist />
+        {watchlist.length ? <FilterAndSortWatchlist /> : null}
         <Watchlist />
         <Playlists />
       </div>

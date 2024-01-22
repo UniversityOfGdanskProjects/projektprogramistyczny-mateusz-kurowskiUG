@@ -7,6 +7,7 @@ import avatar from "./avatar.jpg";
 import loginContext from "../loginContext";
 import tmdbLogo from "../../tmdb-logo.svg";
 import { useRouter } from "next/navigation";
+import SearchBar from "./SearchBar";
 function NavBar() {
   const router = useRouter();
   const { theme, loggedIn, handleLogout, handleSearch, user } =
@@ -25,14 +26,7 @@ function NavBar() {
 
       <div className="flex-none gap-2">
         {loggedIn ? (
-          <div className="form-control">
-            <input
-              type="text"
-              placeholder="Search"
-              onChange={handleSearch}
-              className="input input-bordered w-9/12 self-end"
-            />
-          </div>
+          <SearchBar/>
         ) : null}
 
         {!loggedIn ? (
