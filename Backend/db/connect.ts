@@ -489,17 +489,12 @@ class Db {
           user: undefined,
         };
       } else {
-        const emailUpdated = await userToUpdate
-          .update({ email })
-          .catch(() => {
-            errors.push(DBMessage.EMAIL_NOT_UPDATED);
-          })
-          .then({ result: true, errors, user: undefined });
-        if (errors.length) return { result: false, errors, user: undefined };
-        return { result: true, errors, user: emailUpdated.properties() };
+        const emailUpdated = await userToUpdate.update({ email }).catch(() => {
+          errors.push(DBMessage.EMAIL_NOT_UPDATED);
+        });
       }
 
-      const passwordMatches = userToUpdate.get("password") === hashedPassword;
+      const passwordMatches = userToUpdate.get("password") === password;
       if (!passwordMatches) {
         return {
           result: false,
