@@ -71,10 +71,14 @@ export interface GetMovieResponse {
   result: boolean;
   msg:
     | DBMessage.INVALID_QUERY
+    | DBMessage.GENRE_NOT_FOUND
+    | DBMessage.USER_NOT_FOUND
     | DBMessage.MOVIE_NOT_FOUND
     | DBMessage.MOVIE_FOUND
-    | DBMessage.TMDB_API_ERROR;
-  data: MovieInterface | MovieInterface[] | undefined;
+    | DBMessage.TMDB_API_ERROR
+    | DBMessage.MOVIES_NOT_FOUND
+    | DBMessage.MOVIES_FOUND;
+  data: MovieInterface | MovieInterface[] | undefined | any;
 }
 
 export interface GetGenresReponse {
@@ -246,11 +250,14 @@ export interface GetUserResponse {
 }
 export interface UpdateUserProfileResponse {
   result: boolean;
-  errors: string[];
+  errors: string[] | string;
+  msg?: string;
   user: UserInterface | undefined | false;
+  data?: UserInterface | undefined;
 }
 
 export enum DBMessage {
+  MOVIES_FOUND = "Movies found",
   MOVIES_NOT_FOUND = "Movies not found",
   PASSWORD_UPDATED = "Password updated successfully",
   EMAIL_UPDATED = "Email updated successfully",

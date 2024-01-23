@@ -4,6 +4,7 @@ import Envs from "../interfaces/envs";
 import userSchema from "./models/User";
 import { v4 as uuidv4 } from "uuid";
 import newUserInterface from "../interfaces/newUser";
+import _ from "lodash";
 import {
   DBMessage,
   UserCreationResponse,
@@ -71,7 +72,7 @@ class Db {
     this.getEnvs();
     this.setUp();
     this.dropAll().then(() => {
-      this.testData().then((res) => {
+      this.testData().then(() => {
         console.log("loaded test data");
       });
     });
@@ -89,7 +90,7 @@ class Db {
     return driver;
   }
 
-  async dropAll(): Promise<boolean> {
+  async dropAll(): Promise<void> {
     Promise.all([
       this.users.deleteAll(),
       this.movies.deleteAll(),
@@ -113,22 +114,20 @@ class Db {
     Promise.all(promises)
       .then((res) => {
         res.forEach((response) => {
-          const movies = response.data.results.forEach(
-            async (movie: MovieInterface) => {
-              const movieWithDetaisl = await this.getTMDBMovieDetails(movie.id);
-              const { genres }: { genres: { id: number; name: string }[] } =
-                movieWithDetaisl;
-              const movieNode = await this.movies.create(movieWithDetaisl);
+          response.data.results.forEach(async (movie: MovieInterface) => {
+            const movieWithDetaisl = await this.getTMDBMovieDetails(movie.id);
+            const { genres }: { genres: { id: number; name: string }[] } =
+              movieWithDetaisl;
+            const movieNode = await this.movies.create(movieWithDetaisl);
 
-              genres.forEach(async ({ id }) => {
-                const genreNode = await this.genres.first("TMDBId", id);
-                if (!genreNode) return;
-                await movieNode.relateTo(genreNode, "genre", {
-                  date: new Date(),
-                });
+            genres.forEach(async ({ id }) => {
+              const genreNode = await this.genres.first("TMDBId", id);
+              if (!genreNode) return;
+              await movieNode.relateTo(genreNode, "genre", {
+                date: new Date(),
               });
-            }
-          );
+            });
+          });
         });
       })
       .catch((e) => console.log(e));
@@ -181,9 +180,19 @@ class Db {
 
   async testData() {
     const testGenre = await this.genres.create({
-      id: "fca4b1e4-2f59-4352-bd61-8b3bf804686e",
+      id: "fca4b1e4-2f59-4352-bd61-8b3bf804686f",
       name: "testGenre",
       TMDBId: 404,
+    });
+    const testGenre2 = await this.genres.create({
+      id: "fca4b1e4-2f59-4352-bd61-8b3bf804686d",
+      name: "testGenre2",
+      TMDBId: 406,
+    });
+    const testGenre3 = await this.genres.create({
+      id: "fca4b1e4-2f59-4352-bd61-8b3bf804686e",
+      name: "testGenre3",
+      TMDBId: 405,
     });
 
     const u1 = {
@@ -235,7 +244,7 @@ class Db {
     };
 
     const m1 = db.createMovie(movie1, [testGenre.properties().id]);
-    const m2 = db.createMovie(movie2, [testGenre.properties().id]);
+    const m2 = db.createMovie(movie2, [testGenre2.properties().id]);
 
     const m3 = db.createMovie(
       {
@@ -254,7 +263,7 @@ class Db {
         budget: 1,
         status: "status",
       },
-      [testGenre.properties().id]
+      [testGenre3.properties().id]
     );
     const playlist12: PlaylistInterface = {
       id: "b47fa852-dec5-408f-a7d7-f8ab62297610",
@@ -316,7 +325,7 @@ class Db {
     return { result: true, msg: DBMessage.GENRES_FOUND, data: genresJson };
   }
 
-  async getAllMovies() {
+  async getAllMovies(): Promise<GetMovieResponse> {
     const movies = await this.movies.all();
     if (!movies)
       return {
@@ -374,7 +383,7 @@ class Db {
     if (!user)
       return { result: false, msg: DBMessage.USER_NOT_FOUND, data: undefined };
     const userJson = user.properties();
-    delete userJson.password;
+    delete userJson?.password;
     return { result: true, msg: DBMessage.USER_FOUND, data: userJson };
   }
 
@@ -446,7 +455,7 @@ class Db {
     };
     return movie;
   }
-  async loadTMDBGenres(): Promise<GenreInterface[]> {
+  async loadTMDBGenres(): Promise<void> {
     const URL = "https://api.themoviedb.org/3/genre/movie/list";
     try {
       const result = await (
@@ -507,7 +516,7 @@ class Db {
         };
         return res;
       }
-      const hashedPassword = await bcrypt.hash(password, this.salt);
+      await bcrypt.hash(password, this.salt);
 
       if (!this.emailRegex.test(email)) {
         return {
@@ -516,7 +525,7 @@ class Db {
           user: undefined,
         };
       } else {
-        const emailUpdated = await userToUpdate.update({ email }).catch(() => {
+        await userToUpdate.update({ email }).catch(() => {
           errors.push(DBMessage.EMAIL_NOT_UPDATED);
         });
       }
@@ -558,8 +567,8 @@ class Db {
           user: undefined,
         };
       }
-      const emailUpdated = userToUpdate.update({ [email]: email }).catch(() => {
-        results.push(DBMessage.EMAIL_NOT_UPDATED);
+      userToUpdate.update({ [email]: email }).catch(() => {
+        errors.push(DBMessage.EMAIL_NOT_UPDATED);
       });
     }
 
@@ -568,10 +577,16 @@ class Db {
         result: false,
         msg: DBMessage.USER_NOT_UPDATED,
         data: undefined,
+        errors: [...errors, DBMessage.USER_NOT_UPDATED],
       };
     const userJson = updatedUser.properties();
     delete userJson.password;
-    return { result: true, msg: DBMessage.USER_UPDATED, data: userJson };
+    return {
+      result: true,
+      msg: DBMessage.USER_UPDATED,
+      user: userJson,
+      errors: [],
+    };
   }
   async createNewMovie({
     title,
@@ -598,7 +613,7 @@ class Db {
     if (!genre)
       return { result: false, msg: DBMessage.GENRE_NOT_FOUND, data: undefined };
 
-    const movie: MovieInterface = {
+    const movie = {
       id: uuidv4(),
       title,
       popularity,
@@ -606,6 +621,7 @@ class Db {
       poster_path,
       adult,
       backdrop_path,
+      // TMDBId: -1,
       budget,
       status,
     };
@@ -629,7 +645,7 @@ class Db {
     const movie = await this.movies.find(movieId);
     if (!movie)
       return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
-    const genreNodes = await Promise.all(
+    await Promise.all(
       genres.map(async (genreId) => {
         const genre = await this.genres.find(genreId);
         if (!genre)
@@ -651,6 +667,8 @@ class Db {
     if (!movie)
       return { result: false, msg: DBMessage.MOVIE_NOT_FOUND, data: undefined };
     const updated = await movie.update(update);
+    console.log(updated.properties());
+
     if (!updated)
       return {
         result: false,
@@ -1010,9 +1028,13 @@ class Db {
     const movies_rel: NodeCollection = await playlist.get("has");
     if (!movies_rel) return [];
     if (!movies_rel.length) return [];
-    const movies = movies_rel.map((rel: Node<MovieInterface>) =>
-      rel.properties()
-    );
+    const movies = movies_rel.map((rel: Node<MovieInterface>) => {
+      const props = rel.properties();
+      const genres = rel.get("genre").map((genre) => genre.properties());
+      console.log({ ...props, genres });
+
+      return { ...props, genres };
+    });
     return movies;
   }
 
@@ -1020,7 +1042,6 @@ class Db {
     const user = await this.users.find(userId);
     if (!user)
       return { result: false, msg: DBMessage.USER_NOT_FOUND, data: undefined };
-
     const playlists_rel: NodeCollection = await user.get("playlist");
     if (!playlists_rel)
       return {
@@ -1049,6 +1070,7 @@ class Db {
     const playlistsWithMovies = await Promise.all(
       playlists.map(async (playlist) => {
         const movies = await this.getMoviesInPlaylist(playlist.id);
+
         return { ...playlist, movies };
       })
     );
@@ -1355,7 +1377,31 @@ class Db {
     const result = await session.run(`call apoc.export.json.all("/tmdb.json")`);
     return result;
   }
-
+  async getUserStats(userId: string) {
+    const user = await this.users.find(userId);
+    if (!user)
+      return { result: false, msg: DBMessage.USER_NOT_FOUND, data: undefined };
+    const reviews = this.getReviewsByUser(user);
+    const watchlist = this.getWatchlist(userId);
+    const playlists = this.getPlaylists(userId);
+    const statsProm = await Promise.all([reviews, watchlist, playlists]);
+    const [reviewsResult, watchlistResult, playlistsResult] = statsProm;
+    const allMovies = playlistsResult.data?.map((playlist) =>
+      playlist.movies?.map((movie) => movie.genres)
+    );
+    const flatMovies = allMovies?.flat(2);
+    const genres = flatMovies?.map((genre) => genre.name);
+    const countedGenres = _.countBy(genres);
+    const favouriteGenre = _.maxBy(Object.entries(countedGenres), (e) => e[1]);
+    const stats = {
+      reviews: reviewsResult.length,
+      watchlist: watchlistResult.data.length,
+      playlists: playlistsResult.data.length,
+      // allMovies: countedGenres,
+      favouriteGenre,
+    };
+    return { result: true, msg: DBMessage.USER_STATS_FOUND, data: stats };
+  }
   async getFiveRandomMovies() {
     const session = db.cDriver.session();
     const result = await session.run(

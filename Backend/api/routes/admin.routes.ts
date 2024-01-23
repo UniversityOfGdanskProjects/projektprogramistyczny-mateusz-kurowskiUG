@@ -1,13 +1,7 @@
 import { Request, Response, Router } from "express";
 import db from "../../db/connect";
-import newUserInterface from "../../interfaces/newUser";
 import MovieInterface from "../../interfaces/Movie";
-import uuidv4 from "uuid";
 const adminRouter = Router();
-adminRouter.use((req: Request, res: Response, next) => {
-  // TODO: Check if user is admin
-  next();
-});
 adminRouter.get("/users", async (req: Request, res: Response) => {
   const users = await db.getUsers();
   if (!users) return res.status(400).json(users);
@@ -91,7 +85,7 @@ adminRouter.put("/movies/:movieId", async (req: Request, res: Response) => {
       .json({ result: false, msg: "Please enter all fields" });
   }
   const updatedMovie: MovieInterface = {
-    id: crypto.randomUUID(),
+    id: movieId,
     title,
     release_date,
     poster_path,
