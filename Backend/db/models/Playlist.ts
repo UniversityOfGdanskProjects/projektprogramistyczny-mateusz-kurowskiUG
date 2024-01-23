@@ -8,6 +8,7 @@ const playlistSchema: SchemaObject = {
   },
   name: { type: "string", required: true },
   date: { type: "datetime", required: true },
+  checksum: { type: "string", required: false },
   has: {
     type: "nodes",
     target: "Movie",

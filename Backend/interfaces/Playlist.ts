@@ -5,5 +5,6 @@ interface PlaylistInterface {
   name: string;
   date: Date;
   movies?: MovieInterface[];
+  checksum?: string;
 }
 export default PlaylistInterface;

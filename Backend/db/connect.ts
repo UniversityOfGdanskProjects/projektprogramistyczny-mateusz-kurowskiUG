@@ -44,9 +44,11 @@ import genreSchema from "./models/Genre";
 import { CastInterface } from "../interfaces/CastInterface";
 import castSchema from "./models/Cast";
 import bcrypt from "bcrypt";
-
+import neo4j from "neo4j-driver";
 class Db {
   instance: Neode;
+  cDriver: any;
+  cSession: any;
   envs: Envs;
   // models
   users: Model<UserInterface>;
@@ -73,6 +75,18 @@ class Db {
         console.log("loaded test data");
       });
     });
+    this.connectToClassicDriver();
+  }
+
+  async connectToClassicDriver(): Promise<any> {
+    const driver = neo4j.driver(
+      "neo4j://localhost:7687",
+      neo4j.auth.basic("neo4j", "test1234")
+    );
+    this.cDriver = driver;
+    console.log("connected to neo4j classic driver");
+
+    return driver;
   }
 
   async dropAll(): Promise<boolean> {
@@ -364,8 +378,24 @@ class Db {
     return { result: true, msg: DBMessage.USER_FOUND, data: userJson };
   }
 
+  // async exportDataFromNeo4j() {
+  //   try {
+  //     const session = this.cDriver.session();
+  //     const result = await session.run(
+  //       `
+  //       CALL apoc.export.file.enabled=true;
+  //       CALL apoc.export.json.all('tmdb.json',{useTypes:true});`
+  //     );
+
+  //     return result;
+  //   } catch (e) {
+  //     return e;
+  //   }
+  // }
   async createUser(user: newUserInterface): Promise<UserCreationResponse> {
-    const id = uuidv4();
+    const session = this.cDriver.session();
+    const result = await session.run(`RETURN apoc.create.uuid() as output`);
+    const id = result.records[0].get("output");
     if (!this.emailRegex.test(user.email)) {
       return { result: false, msg: DBMessage.INVALID_EMAIL, data: undefined };
     }
@@ -415,9 +445,6 @@ class Db {
       genres: tmdbMovie.genres || [],
     };
     return movie;
-  }
-  async getUserStats(id: string) {
-    return id;
   }
   async loadTMDBGenres(): Promise<GenreInterface[]> {
     const URL = "https://api.themoviedb.org/3/genre/movie/list";
@@ -929,11 +956,21 @@ class Db {
       return { result: false, msg: DBMessage.INVALID_NAME, data: undefined };
     if (!user)
       return { result: false, msg: DBMessage.USER_NOT_FOUND, data: undefined };
-
+    const session = this.cDriver.session();
+    const q1 = await session.run(`RETURN apoc.create.uuid() as output`);
+    const id = q1.records[0].get("output");
+    const q2 = await session.run(`return apoc.date.currentTimestamp() as date`);
+    const date = q2.records[0].get("date");
+    const parsed = new Date(Number(date));
+    const randomString = await session.run(
+      `return apoc.text.random(10) as output`
+    );
+    const randomStrRes = randomString.records[0].get("output");
     const newPlaylist: PlaylistInterface = {
-      id: uuidv4(),
+      id,
       name: name,
-      date: new Date(),
+      date: new Date(parsed),
+      checksum: randomStrRes,
       // movies: [],
     };
     const createdPlaylist = await this.playlists.create(newPlaylist);
@@ -944,7 +981,7 @@ class Db {
         data: undefined,
       };
     const related = user.relateTo(createdPlaylist, "playlist", {
-      date: new Date(),
+      date: parsed,
     });
     if (!related)
       return {
@@ -1312,6 +1349,25 @@ class Db {
       msg: DBMessage.REVIEW_DELETED,
       data: reviewToDelete,
     };
+  }
+  async exportToJson() {
+    const session = db.cDriver.session();
+    const result = await session.run(`call apoc.export.json.all("/tmdb.json")`);
+    return result;
+  }
+
+  async getFiveRandomMovies() {
+    const session = db.cDriver.session();
+    const result = await session.run(
+      `MATCH (n) WITH n, rand() AS r ORDER BY r LIMIT 5
+RETURN n`
+    );
+
+    const movies = result.records.map((record) => {
+      const movie = record.get("n").properties;
+      return movie;
+    });
+    return movies;
   }
 }
 const db = new Db();

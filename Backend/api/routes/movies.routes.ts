@@ -8,6 +8,12 @@ moviesRouter.get("/", async (req: Request, res: Response) => {
   }
   return res.status(200).send(movies);
 });
+moviesRouter.get("/random", async (req: Request, res: Response) => {
+  const movies = await db.getFiveRandomMovies();
+  if (!movies) return res.status(400).send(movies);
+  return res.status(200).send(movies);
+});
+
 moviesRouter.get("/page/:pageNumber", async (req: Request, res: Response) => {
   const { pageNumber } = req.params;
   const movies = await db.getAllMovies();
