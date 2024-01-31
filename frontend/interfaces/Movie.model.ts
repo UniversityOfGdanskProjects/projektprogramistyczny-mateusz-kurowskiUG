@@ -10,6 +10,6 @@ interface MovieInterface {
   backdrop_path: string;
   budget?: number;
   status?: string;
-  genres?: { id: number; name: string }[];
+  genres?: { id: number; name: string; TMDBId: number }[];
 }
 export default MovieInterface;

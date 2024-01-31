@@ -1,5 +1,7 @@
 import { createContext } from "react";
 import MovieInterface from "../../../../interfaces/Movie.model";
+import IGenre from "../../../../interfaces/Genre.model";
+import { TMovieAction } from "./movieReducer";
 
 type THomeContext = {
   popularMovies?: MovieInterface[];
@@ -9,7 +11,9 @@ type THomeContext = {
   playlists?: MovieInterface[];
   setPlaylists: (movies: MovieInterface[]) => void;
   allMovies?: MovieInterface[];
-  setAllMovies: (movies: MovieInterface[]) => void;
+  allMoviesDispatch: (action: TMovieAction) => void;
+  allGenres?: IGenre[];
+  setAllGenres: (genres: string[]) => void;
 };
 
 export const homeContext = createContext<THomeContext>({
@@ -20,5 +24,7 @@ export const homeContext = createContext<THomeContext>({
   playlists: [],
   setPlaylists: () => {},
   allMovies: [],
-  setAllMovies: () => {},
+  allMoviesDispatch: () => {},
+  allGenres: [],
+  setAllGenres: () => {},
 });

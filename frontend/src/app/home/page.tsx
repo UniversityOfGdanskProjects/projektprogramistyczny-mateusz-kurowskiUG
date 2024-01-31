@@ -1,16 +1,21 @@
 "use client";
-import React, { useState } from "react";
+import React, { useReducer, useState } from "react";
 import InnerNavBar from "./components/InnerNavBar";
 import Popular from "./components/Popular";
 import { homeContext } from "./components/HomeContext";
 import FilterMovies from "./components/FilterMovies";
 import Movies from "./components/Movies";
 import MovieInterface from "../../../interfaces/Movie.model";
+import movieReducer from "./components/movieReducer";
 
 function Page() {
   const [popularMovies, setPopularMovies] = useState<MovieInterface[]>([]);
-  const [allMovies, setAllMovies] = useState<MovieInterface[]>([]);
-
+  const [allMovies, allMoviesDispatch] = useReducer<MovieInterface[]>(
+    movieReducer,
+    []
+  );
+  const [allGenres, setAllGenres] = useState<string[]>([]);
+  const selectRef = React.useRef(null);
   return (
     <>
       <homeContext.Provider
@@ -18,7 +23,10 @@ function Page() {
           popularMovies,
           setPopularMovies,
           allMovies,
-          setAllMovies,
+          allMoviesDispatch,
+          allGenres,
+          setAllGenres,
+          selectRef,
         }}
       >
         <div className="flex flex-col gap-4 px-2">

@@ -6,6 +6,8 @@ import Image from "next/image";
 import plus18 from "/public/images/plus18.png";
 
 function Primary({ movie }: { movie: MovieInterface }) {
+  console.log(movie);
+
   //   const { movie } = useContext(movieContext);
   return (
     <>

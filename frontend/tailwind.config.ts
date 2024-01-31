@@ -22,6 +22,7 @@ const config: Config = {
       darkBlue: "#1B4F72",
       gray: "#566573 ",
       green: "#229954",
+      white: "#FFFFFF",
     },
   },
   plugins: [require("daisyui")],

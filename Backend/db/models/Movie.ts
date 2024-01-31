@@ -15,10 +15,9 @@ const movieSchema: SchemaObject = {
     type: "string",
     required: true,
   },
-  // overview: {
-  //   type: "string",
-
-  // },
+  overview: {
+    type: "string",
+  },
   popularity: {
     type: "number",
     required: true,

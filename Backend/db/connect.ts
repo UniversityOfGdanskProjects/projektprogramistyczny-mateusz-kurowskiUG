@@ -151,6 +151,8 @@ class Db {
     const genres = (await movie.get("genre")).toJson();
 
     const movieJson = movie.properties();
+    console.log(movieJson);
+
     return {
       result: true,
       msg: DBMessage.MOVIE_FOUND,
@@ -324,7 +326,6 @@ class Db {
     );
     return { result: true, msg: DBMessage.GENRES_FOUND, data: genresJson };
   }
-
   async getAllMovies(): Promise<GetMovieResponse> {
     const movies = await this.movies.all();
     if (!movies)
@@ -335,8 +336,9 @@ class Db {
       };
     const moviesJson = await Promise.all(
       movies.map(async (movie) => {
+        const genres = movie.get("genre").map((genre) => genre.properties());
         const json = await movie.properties();
-        return json;
+        return { ...json, genres };
       })
     );
     return { result: true, msg: DBMessage.MOVIES_FOUND, data: moviesJson };
@@ -439,7 +441,7 @@ class Db {
       id: uuidv4(),
       TMDBId: tmdbMovie.id,
       title: tmdbMovie.title,
-      overview: tmdbMovie.overview,
+      overview: tmdbMovie.overview || " ",
       popularity: tmdbMovie.popularity,
       release_date: tmdbMovie.release_date,
       poster_path: tmdbMovie.poster_path

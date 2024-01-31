@@ -14,22 +14,20 @@ function Movies() {
     };
     loadMovies()
       .then((res) => {
-        console.log(res[0]);
-
-        setAllMovies(res);
+        allMoviesDispatch({ type: "refresh", payload: res });
       })
       .catch(() => {
-        setAllMovies([]);
+        allMoviesDispatch({ type: "refresh", payload: [] });
       });
   }, []);
 
-  const { allMovies, setAllMovies } = useContext(homeContext);
+  const { allMovies, allMoviesDispatch } = useContext(homeContext);
   return (
     <div className="flex flex-wrap gap-3 flex-1">
       {allMovies
         ? allMovies.map((movie: MovieInterface) => (
             <PopularMovie
-              height="h-72"
+              height="h-92"
               width={"w-36"}
               key={movie.id}
               movie={movie}

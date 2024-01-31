@@ -7,12 +7,16 @@ function ProfileInfo() {
     const loadProfileInfo = async () => {
       try {
         const url = `http://localhost:3000/api/users/profile/${user?.userId}`;
-      } catch (e) {
-        
-      }
+      } catch (e) {}
     };
   }, []);
-  return <div>ProfileInfo</div>;
+  return (
+    <>
+      <div>{user?.userId}</div>
+      <div>{user?.email}</div>
+      <div>{user?.role}</div>
+    </>
+  );
 }
 
 export default ProfileInfo;

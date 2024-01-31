@@ -1,26 +1,50 @@
 "use client";
 
-import React from "react";
+import React, { useContext } from "react";
+import GenreSelect from "./GenreSelect";
+import { homeContext } from "./HomeContext";
+import axios from "axios";
 
 function FilterMovies() {
+  const loadMovies = async () => {
+    const res = await axios.get("http://localhost:3000/api/movies");
+    return res.data.data;
+  };
+
+  const { selectRef, allMoviesDispatch } = useContext(homeContext);
+  const handleGenreChange = (e) => {
+    loadMovies()
+      .then((res) => {
+        allMoviesDispatch({ type: "refresh", payload: res });
+        if (+selectRef.current.value !== -1)
+          allMoviesDispatch({
+            type: "filterByGenre",
+            payload: +selectRef.current.value,
+          });
+      })
+      .catch(() => {
+        allMoviesDispatch({ type: "refresh", payload: [] });
+      });
+  };
   return (
     <>
       <div className="collapse bg-base-200">
         <input type="checkbox" className="peer" />
-        <div className="collapse-title bg-info text-primary-content peer-checked:bg-white peer-checked:text-secondary-content text-center text-3xl">
+        <div className="collapse-title bg-info text-primary-content peer-checked:bg-white peer-checked:text-secondary-content text-center text-3xl text-white">
           Filter
         </div>
         <div className="collapse-content bg-white text-primary-content peer-checked:bg-white peer-checked:text-secondary-content flex flex-col">
-          <form action="" className="flex ">
-            <div className="field">1</div>
-            <div className="field">2</div>
-            <div className="field">3</div>
+          <form
+            onChange={handleGenreChange}
+            className="flex flex-col text-center "
+          >
+            <div className="flex justify-between">
+              <GenreSelect />
+            </div>
           </form>
-          <button className="btn btn-info self-end">Info</button>
         </div>
       </div>
     </>
   );
 }
-
 export default FilterMovies;
