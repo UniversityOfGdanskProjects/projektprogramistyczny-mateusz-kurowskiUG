@@ -10,8 +10,7 @@ import { useRouter } from "next/navigation";
 import SearchBar from "./SearchBar";
 function NavBar() {
   const router = useRouter();
-  const { theme, loggedIn, handleLogout, user } =
-    useContext(loginContext);
+  const { theme, loggedIn, handleLogout, user } = useContext(loginContext);
   const goToProfile = () => {
     if (!user || !user.userId) return;
     router.push(`/profile/${user.userId}`);
@@ -55,9 +54,7 @@ function NavBar() {
                 <a>Settings</a>
               </li>
               <li>
-                <a>
-                  <button onClick={handleLogout}>Logout</button>
-                </a>
+                <a onClick={handleLogout}>Logout</a>
               </li>
             </ul>
           </div>

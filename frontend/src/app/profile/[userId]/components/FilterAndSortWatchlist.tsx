@@ -1,6 +1,7 @@
 import React from "react";
 import SortSelect from "./SortSelect";
-import GenreSelect from "@/app/home/components/GenreSelect";
+import WatchlistSearchBar from "./WatchlistSearchBar";
+import WatchlistGenreSelect from "./WatchlistGenreSelect";
 
 function FilterAndSortWatchlist() {
   return (
@@ -12,11 +13,16 @@ function FilterAndSortWatchlist() {
       <div className="collapse-content">
         <div className="flex justify-evenly w-full flex-1 text-center">
           <div className="w-full">
-            <div className="header">GenreSelect</div>
+            <div className="header flex flex-col">
+              <WatchlistGenreSelect />
+              <WatchlistSearchBar />
+            </div>
           </div>
           <div className="border-l-2 w-full">
             <div className="header">Sort</div>
-            <SortSelect />
+            <form>
+              <SortSelect />
+            </form>
           </div>
         </div>
       </div>

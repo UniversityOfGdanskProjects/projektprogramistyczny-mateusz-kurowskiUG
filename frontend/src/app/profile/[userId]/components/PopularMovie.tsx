@@ -17,7 +17,7 @@ function PopularMovie({
   where: string;
   playlistId?: string;
 }) {
-  const { setWatchlist, setPlaylists } = useContext(profileContext);
+  const { watchlistDispatch, setPlaylists } = useContext(profileContext);
   const { user } = useContext(loginContext);
 
   const deleteFromWatchlist = async () => {
@@ -27,7 +27,7 @@ function PopularMovie({
         { data: { userId: user?.userId } }
       );
       if (response.status === 200) {
-        setWatchlist((prev) => prev.filter((m) => m.id !== movie.id));
+        watchlistDispatch({ type: "remove", payload: movie.id });
       }
     } catch (e) {
       alert("Something went wrong");

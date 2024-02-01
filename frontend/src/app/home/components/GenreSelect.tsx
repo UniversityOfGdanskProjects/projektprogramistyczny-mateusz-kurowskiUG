@@ -27,7 +27,7 @@ function GenreSelect() {
         ref={selectRef}
         defaultValue={-1}
         name="genre"
-        className="genre select select-bordered w-full max-w-xs text-center bg-white "
+        className="genre select select-bordered w-full max-w-xs text-center self-center"
       >
         <option value={-1}>All</option>
         {allGenres

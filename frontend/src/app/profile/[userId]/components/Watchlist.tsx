@@ -10,6 +10,7 @@ function Watchlist() {
   const { watchlist, watchlistDispatch } = useContext(profileContext);
   useEffect(() => {
     const loadWatchlist = async () => {
+      if (!user?.userId) return [];
       try {
         const watchlistResponse = await axios.get(
           `http://localhost:3000/api/watchlist/${user?.userId}`

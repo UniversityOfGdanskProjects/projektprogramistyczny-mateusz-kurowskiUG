@@ -910,9 +910,10 @@ class Db {
         msg: DBMessage.WATCHLIST_EMPTY,
         data: [],
       };
-    const watchlistMovies: MovieInterface[] = watchlist.map((movie) =>
-      movie.properties()
-    );
+    const watchlistMovies: MovieInterface[] = watchlist.map((movie) => {
+      const genres = movie.get("genre").map((genre) => genre.properties());
+      return { ...movie.properties(), genres };
+    });
     return {
       result: true,
       msg: DBMessage.WATCHLIST_FOUND,
