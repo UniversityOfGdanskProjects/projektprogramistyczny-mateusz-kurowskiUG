@@ -13,8 +13,8 @@ const LogRegForm = ({
   children: React.JSX.Element;
   validationSchema: Yup.ObjectSchema<any>;
   initialValues: Yup.StringSchema<string, Yup.AnyObject, undefined, "">;
-  handler: () => void;
   type: string;
+  submitHandler: (email: string, password: string) => void;
 }) => {
   return (
     <div>

@@ -10,12 +10,12 @@ import { useRouter } from "next/navigation";
 import SearchBar from "./SearchBar";
 function NavBar() {
   const router = useRouter();
-  const { theme, loggedIn, handleLogout, handleSearch, user } =
+  const { theme, loggedIn, handleLogout, user } =
     useContext(loginContext);
   const goToProfile = () => {
+    if (!user || !user.userId) return;
     router.push(`/profile/${user.userId}`);
   };
-  const links = ["home", "about", "contact"];
   return (
     <div data-theme={theme} className="navbar justify-between bg-base-100">
       <div className="flex-1">
@@ -25,9 +25,7 @@ function NavBar() {
       </div>
 
       <div className="flex-none gap-2">
-        {loggedIn ? (
-          <SearchBar/>
-        ) : null}
+        {loggedIn ? <SearchBar /> : null}
 
         {!loggedIn ? (
           <LogInSection />
@@ -57,7 +55,9 @@ function NavBar() {
                 <a>Settings</a>
               </li>
               <li>
-                <a onClick={handleLogout}>Logout</a>
+                <a>
+                  <button onClick={handleLogout}>Logout</button>
+                </a>
               </li>
             </ul>
           </div>

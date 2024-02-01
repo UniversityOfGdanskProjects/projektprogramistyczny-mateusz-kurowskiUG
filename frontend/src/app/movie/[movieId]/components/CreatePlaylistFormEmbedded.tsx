@@ -20,6 +20,8 @@ function CreatePlaylistFormEmbedded() {
     helpers: FormikHelpers<TNewPlaylistFormType & { response: string }>
   ) => {
     setStatus("Creating new playlist...");
+    console.log(values, user?.userId);
+
     const url = "http://localhost:3000/api/playlists/";
     try {
       const request = await axios.post(url, {

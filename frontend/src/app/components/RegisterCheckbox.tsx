@@ -3,7 +3,7 @@ import { useField } from "formik";
 import React from "react";
 
 function FormCheckbox({ name, label }) {
-  const [field, meta, helpers] = useField(name);
+  const [field, meta] = useField(name);
   return (
     <div className="form-control">
       <label className="label cursor-pointer">

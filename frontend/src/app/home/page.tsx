@@ -8,7 +8,7 @@ import Movies from "./components/Movies";
 import MovieInterface from "../../../interfaces/Movie.model";
 import movieReducer from "./components/movieReducer";
 
-function Page() {
+function HomePage() {
   const [popularMovies, setPopularMovies] = useState<MovieInterface[]>([]);
   const [allMovies, allMoviesDispatch] = useReducer<MovieInterface[]>(
     movieReducer,
@@ -40,4 +40,4 @@ function Page() {
   );
 }
 
-export default Page;
+export default HomePage;

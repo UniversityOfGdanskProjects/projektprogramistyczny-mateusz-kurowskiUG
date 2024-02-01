@@ -13,24 +13,32 @@ import {
 } from "./utils";
 import RegisterForm from "./RegisterForm";
 import { useRouter } from "next/navigation";
-function Layout({ children }) {
+import UserInterface from "../../../interfaces/User.model";
+import MovieInterface from "../../../interfaces/Movie.model";
+function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [theme, setTheme] = useState("dark");
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [wantToLogin, setWantToLogin] = useState(false);
-  const [user, setUser] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
+  const [theme] = useState<string>("dark");
+  const [loggedIn, setLoggedIn] = useState<boolean>(false);
+  const [wantToLogin, setWantToLogin] = useState<boolean>(false);
+  const [user, setUser] = useState<UserInterface>({} as UserInterface);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [searchResults, setSearchResults] = useState<MovieInterface[]>([]);
 
   useEffect(() => {
-    if (localStorage.getItem("loggedIn") === "true") {
+    if (
+      localStorage.getItem("loggedIn") === "true" &&
+      !loggedIn &&
+      !user.userId
+    ) {
+      const userId = localStorage.getItem("userId");
+      const email = localStorage.getItem("email");
+      const role = localStorage.getItem("role");
       setUser({
-        userId: localStorage.getItem("userId"),
-        email: localStorage.getItem("email"),
-        role: localStorage.getItem("role"),
+        userId,
+        email,
+        role,
       });
       setLoggedIn(true);
-      console.log(user);
     }
   }, []);
 
@@ -40,7 +48,7 @@ function Layout({ children }) {
     localStorage.removeItem("email");
     localStorage.removeItem("role");
     localStorage.removeItem("loggedIn");
-    setUser(null);
+    setUser({} as UserInterface);
     router.push("/");
   };
   return (
@@ -62,7 +70,7 @@ function Layout({ children }) {
       }}
     >
       <NavBar />
-      {loggedIn ? (
+      {loggedIn && user && user.userId ? (
         children
       ) : wantToLogin ? (
         <LoginForm

@@ -1,13 +1,9 @@
 "use client";
-import React, { useContext } from "react";
-import loginContext from "./loginContext";
-import { useRouter } from "next/navigation";
+import React from "react";
+import HomePage from "./home/page";
 
 function Page() {
-  const { loggedIn } = useContext(loginContext);
-  const router = useRouter();
-  if (loggedIn) router.push("/home/");
-  return <>xyz</>;
+  return <HomePage />;
 }
 
 export default Page;

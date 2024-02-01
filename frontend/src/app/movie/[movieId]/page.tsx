@@ -21,7 +21,7 @@ function Page({ params }: { params: { movieId: string } }) {
         setMovie,
         cast,
         setCast,
-        movieId: params.movieId,
+        movieId: +params.movieId,
         reviews,
         setReviews,
         reviewed,
@@ -34,7 +34,7 @@ function Page({ params }: { params: { movieId: string } }) {
         setWatchlist,
       }}
     >
-      <MovieDetails movieId={params.movieId} />
+      <MovieDetails />
     </movieContext.Provider>
   );
 }

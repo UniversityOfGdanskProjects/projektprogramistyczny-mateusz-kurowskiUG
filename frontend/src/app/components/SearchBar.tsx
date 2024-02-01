@@ -3,24 +3,26 @@ import loginContext from "../loginContext";
 import axios from "axios";
 
 function SearchBar() {
-  const { searchTerm, setSearchTerm, searchResults, setSearchResults } =
+  const { searchTerm, setSearchTerm, setSearchResults } =
     useContext(loginContext);
   const searchRef = createRef<HTMLInputElement>();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log("search", searchTerm);
-
         const url = `http://localhost:3000/api/tmdb/movies/search?query=${searchTerm}`;
+        if (!searchTerm) return;
         const searchResult = await axios.get(url);
         if (searchResult.status === 200) {
           setSearchResults(searchResult.data.data);
+          return;
         } else {
           setSearchResults([]);
+          return;
         }
       } catch (e) {
         setSearchResults([]);
+        return;
       }
     };
     const delay = setTimeout(() => {
@@ -29,14 +31,14 @@ function SearchBar() {
       } else {
         setSearchResults([]);
       }
-    }, 3000);
+    }, 1000);
     return () => {
       clearTimeout(delay);
     };
   }, [searchTerm]);
 
   const handleSearch = () => {
-    console.log(searchRef.current?.value);
+    if (!searchRef.current) return;
     setSearchTerm(searchRef.current?.value);
   };
   return (

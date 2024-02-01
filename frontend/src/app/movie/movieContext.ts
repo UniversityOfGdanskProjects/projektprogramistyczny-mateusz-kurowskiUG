@@ -8,18 +8,19 @@ import PlaylistInterface from "../../../interfaces/Playlist.model";
 type TMovieContext = {
   movie?: MovieInterface | null;
   cast?: CastInterface[] | null;
-  setMovie: (movie: MovieInterface) => void;
+  setMovie: (movie: MovieInterface) => MovieInterface;
   setCast: (cast: CastInterface[]) => void;
   movieId: number | null;
   reviews?: ReviewInterface[] | null;
-  setReviews: (reviews: ReviewInterface[]) => void;
+  setReviews: (reviews: ReviewInterface[]) => ReviewInterface[];
   setReviewed: (reviewed: boolean) => void;
   inWatchlist?: boolean;
-  setInWatchlist: (inWatchlist: boolean) => void;
+  setInWatchlist: (inWatchlist: boolean) => boolean;
   playlists?: PlaylistInterface[] | null;
-  setPlaylists: (playlists: PlaylistInterface[]) => void;
+  setPlaylists: (playlists: PlaylistInterface[]) => PlaylistInterface[];
   watchlist?: MovieInterface[] | null;
-  setWatchlist: (watchlist: MovieInterface[]) => void;
+  setWatchlist: (watchlist: MovieInterface[]) => MovieInterface[];
+  reviewed?: boolean;
 };
 
 export const movieContext = createContext<TMovieContext>({

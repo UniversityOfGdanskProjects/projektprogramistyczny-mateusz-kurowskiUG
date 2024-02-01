@@ -10,12 +10,12 @@ function LoginForm({
   validationSchema,
   initialValues,
 }: {
-  validationSchema: Yup.ObjectSchema<any, Yup.AnyObject, any, "">;
+  validationSchema: Yup.ObjectSchema<Yup.AnyObject, "">;
   initialValues: Yup.StringSchema<string, Yup.AnyObject, undefined, "">;
 }) {
   const { setUser, setLoggedIn } = useContext(loginContext);
-  const error = "";
-  const loginHandler = async (email, password) => {
+  const loginHandler = async (email: string, password: string) => {
+    if (!email || !password) return alert("Please fill in all fields");
     try {
       const response = await axios.post(
         "http://localhost:3000/api/users/login",
@@ -26,11 +26,15 @@ function LoginForm({
       );
       if (response.status === 200) {
         setLoggedIn(true);
-        setUser(response.data.data);
-        localStorage.setItem("userId", response.data.data.id);
-        localStorage.setItem("email", response.data.data.email);
-        localStorage.setItem("role", response.data.data.role);
+        const { id, email, role } = response.data.data;
+
+        setUser({ userId: id, email, role });
+        localStorage.setItem("userId", id);
+        localStorage.setItem("email", email);
+        localStorage.setItem("role", role);
         localStorage.setItem("loggedIn", "true");
+      } else {
+        alert("Wrong creds");
       }
     } catch (error) {
       alert("Wrong creds");

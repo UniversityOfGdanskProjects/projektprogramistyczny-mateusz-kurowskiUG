@@ -10,6 +10,8 @@ function UserActions() {
   const { user } = useContext(loginContext);
 
   const addToWatchlist = async () => {
+    if (!user) return;
+    if (!movie) return;
     const url = "http://localhost:3000/api/watchlist/";
     const requestBody = {
       movieId: movie.id,
@@ -19,18 +21,20 @@ function UserActions() {
       const request = await axios.post(url, requestBody);
       if (request.status === 200) {
         setInWatchlist(true);
+      } else {
+        alert("some error occured");
       }
     } catch (error) {
-      console.log(error);
+      return;
     }
   };
   const removeFromWatchlist = async () => {
+    if (!user) return;
+    if (!movie) return;
     const url = `http://localhost:3000/api/watchlist/${movie?.id}`;
     const requestBody = {
       userId: user?.userId,
     };
-    console.log("url", url);
-    console.log("body", requestBody);
 
     try {
       const request = await axios.delete(url, { data: requestBody });
@@ -41,18 +45,17 @@ function UserActions() {
       alert("some error occured");
     }
   };
-  // TODO: PLAYLIST REDUCER??????????
   const showPlaylists = async () => {
-    document.getElementById("playlist-modal").showModal(); // const url = `http://localhost:3000/api/playlists/${user?.userId}`;
-    // const request = await axios.get(url);
+    const modal = document.getElementById("playlist-modal");
+    if (!modal) return;
+    modal.showModal();
   };
-
-  const removeFromPlaylist = () => {};
 
   return (
     <div className="flex flex-col py-4 px-2 gap-2">
       {inWatchlist ? (
         <ListButton
+          color="bg-sea"
           fullHeart={true}
           onClick={removeFromWatchlist}
           text="Remove from watchlist"

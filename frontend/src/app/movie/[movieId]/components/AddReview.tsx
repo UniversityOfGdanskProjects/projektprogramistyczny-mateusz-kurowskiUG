@@ -5,7 +5,7 @@ import ReviewForm from "./ReviewForm";
 import { movieContext } from "../../movieContext";
 
 function AddReview() {
-  const { reviews, reviewed } = useContext(movieContext);
+  const { reviewed } = useContext(movieContext);
 
   return (
     <>

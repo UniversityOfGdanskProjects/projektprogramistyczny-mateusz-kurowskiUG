@@ -4,21 +4,28 @@ import LogRegForm from "./LogRegForm";
 import LoginInput from "./LoginInput";
 import FormCheckbox from "./RegisterCheckbox";
 import axios from "axios";
-import { useRouter } from "next/navigation";
 import loginContext from "../loginContext";
 
 function RegisterForm({ validationSchema, initialValues }) {
-  const { wantToLogin, setWantToLogin } = useContext(loginContext);
-  const handleRegister = async (email, password) => {
-    const registerResponse = await axios.post(
-      "http://localhost:3000/api/users/register",
-      {
-        email,
-        password,
+  const { setWantToLogin } = useContext(loginContext);
+  const handleRegister = async (email: string, password: string) => {
+    if (!email || !password) return alert("Please fill in all fields");
+    try {
+      const registerResponse = await axios.post(
+        "http://localhost:3000/api/users/register",
+        {
+          email,
+          password,
+        }
+      );
+      if (registerResponse.status === 200) {
+        setWantToLogin(true);
+        return;
       }
-    );
-    if (registerResponse.status === 200) {
-      setWantToLogin(true);
+      return;
+    } catch (e) {
+      alert("Account exists. Please login.");
+      return;
     }
   };
   return (

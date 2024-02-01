@@ -13,7 +13,7 @@ function LoginInput({
   placeholder: string;
   type: string;
 }) {
-  const [field, meta, helpers] = useField(name);
+  const [field, meta] = useField(name);
   return (
     <>
       <label className="form-control w-full max-w-xs">

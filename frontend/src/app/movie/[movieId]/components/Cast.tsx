@@ -1,16 +1,16 @@
 "use client";
 import axios from "axios";
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useLayoutEffect } from "react";
 import { movieContext } from "../../movieContext";
-import { CastInterface } from "../../../../../interfaces/Cast.model";
+import CastInterface from "../../../../../interfaces/Cast.model";
 import CrewMember from "./CrewMember";
 
 function Cast() {
-  const { cast, setCast, movieId }: { cast: CastInterface[]; movieId: string } =
-    useContext(movieContext);
-  useEffect(() => {
+  const { cast, setCast, movieId } = useContext(movieContext);
+  useLayoutEffect(() => {
     const loadCast = async (): Promise<CastInterface[]> => {
       try {
+        if (!movieId) return [];
         const cast = await axios.get(
           `http://localhost:3000/api/cast/${movieId}`
         );
@@ -19,7 +19,6 @@ function Cast() {
         } else {
           return [];
         }
-        return cast;
       } catch (e) {
         return [];
       }
@@ -28,15 +27,17 @@ function Cast() {
       .then((res) => {
         setCast(res);
       })
-      .catch((res) => {
+      .catch(() => {
         setCast([]);
       });
   }, []);
   return (
     <div className="carousel py-5 px-2 flex gap-6 overflow-scroll w-full">
-      {cast.map((member: CastInterface) => (
-        <CrewMember key={member.id} member={member} />
-      ))}
+      {!cast || cast.length === 0
+        ? null
+        : cast.map((member: CastInterface) => (
+            <CrewMember key={member.id} member={member} />
+          ))}
     </div>
   );
 }

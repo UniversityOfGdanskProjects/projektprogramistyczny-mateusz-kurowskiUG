@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useLayoutEffect } from "react";
 import { movieContext } from "../../movieContext";
 import MovieInterface from "../../../../../interfaces/Movie.model";
 import Cast from "./Cast";
@@ -11,49 +11,51 @@ import AddReview from "./AddReview";
 import Primary from "./Primary";
 import UserActions from "./UserActions";
 import loginContext from "@/app/loginContext";
+import PlaylistInterface from "../../../../../interfaces/Playlist.model";
 
 function MovieDetails() {
   const router = useRouter();
   const {
     movie,
     setMovie,
-    inWatchlist,
     setInWatchlist,
-    playlists,
-    inPlaylists,
-    watchlist,
     setWatchlist,
     movieId,
     setPlaylists,
   } = useContext(movieContext);
   const { user } = useContext(loginContext);
   useEffect(() => {
-    const loadMovieDetails = async () => {
-      const movie = await axios.get(
-        `http://localhost:3000/api/movies/${movieId}`
-      );
-      const data = movie.data.data;
-      return data;
+    if (!movieId) return;
+    console.log("USER", user);
+
+    const loadMovieDetails = async (): Promise<MovieInterface> => {
+      try {
+        const movie = await axios.get(
+          `http://localhost:3000/api/movies/${movieId}`
+        );
+        const data = movie.data.data;
+        return data;
+      } catch (error) {
+        return {} as MovieInterface;
+      }
     };
-    const loadWatchlist = async () => {
+    const loadWatchlist = async (): Promise<MovieInterface[]> => {
+      if (!user) return [];
       const url = `http://localhost:3000/api/watchlist/${user.userId}`;
       try {
-        console.log(url);
         const request = await axios.get(url);
         if (request.status === 200) {
           const watchlist: MovieInterface[] = request.data.data;
-          console.log(watchlist);
-
           return watchlist;
         }
         return [];
       } catch (error) {
-        console.log(error);
         return [];
       }
     };
 
-    const loadPlaylists = async () => {
+    const loadPlaylists = async (): Promise<PlaylistInterface[]> => {
+      if (!user) return [];
       const url = `localhost:3000/api/playlists/${user?.userId}`;
       try {
         const request = await axios.get(url);
@@ -68,8 +70,8 @@ function MovieDetails() {
     };
 
     loadMovieDetails()
-      .then((moviesRes: MovieInterface[]) => {
-        setMovie(moviesRes);
+      .then((value: MovieInterface) => {
+        setMovie(value);
       })
       .catch(() => {
         router.push("/404");
@@ -89,7 +91,7 @@ function MovieDetails() {
         alert("some error");
       });
     loadPlaylists()
-      .then((playlistsRes) => {
+      .then((playlistsRes: PlaylistInterface[]) => {
         setPlaylists(playlistsRes);
       })
       .catch(() => {
@@ -100,7 +102,7 @@ function MovieDetails() {
 
   return (
     <>
-      <Primary movie={movie} />
+      {movie ? <Primary movie={movie} /> : null}
       <UserActions />
       <Cast />
       <Reviews />
