@@ -7,7 +7,7 @@ import MovieInterface from "../../../../../interfaces/Movie.model";
 
 function Watchlist() {
   const { user } = useContext(loginContext);
-  const { watchlist, setWatchlist } = useContext(profileContext);
+  const { watchlist, watchlistDispatch } = useContext(profileContext);
   useEffect(() => {
     const loadWatchlist = async () => {
       try {
@@ -20,8 +20,10 @@ function Watchlist() {
       }
     };
     loadWatchlist()
-      .then((watchlist) => setWatchlist(watchlist))
-      .catch(() => setWatchlist([]));
+      .then((watchlist) =>
+        watchlistDispatch({ type: "set", payload: watchlist })
+      )
+      .catch(() => watchlistDispatch({ type: "set", payload: [] }));
   }, []);
 
   return (
