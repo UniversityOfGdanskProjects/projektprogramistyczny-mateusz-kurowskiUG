@@ -1,5 +1,5 @@
 "use client";
-import React, { useContext } from "react";
+import React, { useContext, useMemo } from "react";
 import { profileContext } from "../profileContext";
 import IGenre from "../../../../../interfaces/Genre.model";
 import loginContext from "@/app/loginContext";
@@ -20,17 +20,20 @@ function WatchlistGenreSelect() {
       return [];
     }
   };
-  const genres = watchlist
-    .map((movie) => movie.genres)
-    .flat()
-    .reduce((acc: IGenre[], genre) => {
-      const genreInAcc = acc.find((g) => g.id === genre.id);
-      if (!genreInAcc) {
-        acc.push(genre);
-      }
-      return acc;
-    }, [])
-    .sort((a: IGenre, b: IGenre) => a.name.localeCompare(b.name));
+  const genGenres = (watchlist: MovieInterface[]) =>
+    watchlist
+      .map((movie) => movie.genres)
+      .flat()
+      .reduce((acc: IGenre[], genre) => {
+        const genreInAcc = acc.find((g) => g.id === genre.id);
+        if (!genreInAcc) {
+          acc.push(genre);
+        }
+        return acc;
+      }, [])
+      .sort((a: IGenre, b: IGenre) => a.name.localeCompare(b.name));
+
+  const genres = useMemo(() => genGenres(watchlist), [watchlist]);
 
   const filterWatchlist = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const genreId = e?.target.value;

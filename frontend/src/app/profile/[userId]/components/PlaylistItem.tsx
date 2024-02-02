@@ -3,6 +3,7 @@ import PlaylistInterface from "../../../../../interfaces/Playlist.model";
 import PopularMovie from "./PopularMovie";
 import axios from "axios";
 import { profileContext } from "../profileContext";
+import { uniqueId } from "lodash";
 
 function PlaylistItem({ playlist }: { playlist: PlaylistInterface }) {
   const { setPlaylists } = useContext(profileContext);
@@ -35,7 +36,7 @@ function PlaylistItem({ playlist }: { playlist: PlaylistInterface }) {
             ? playlist.movies.map((movie) => (
                 <PopularMovie
                   where="playlist"
-                  key={playlist.id}
+                  key={uniqueId()}
                   playlistId={playlist.id}
                   movie={movie}
                 />

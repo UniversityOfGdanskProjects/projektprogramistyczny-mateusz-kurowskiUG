@@ -4,7 +4,7 @@ import { profileContext } from "../profileContext";
 import axios from "axios";
 import PopularMovie from "./PopularMovie";
 import MovieInterface from "../../../../../interfaces/Movie.model";
-
+import { uniqueId } from "lodash";
 function Watchlist() {
   const { user } = useContext(loginContext);
   const { watchlist, watchlistDispatch } = useContext(profileContext);
@@ -33,9 +33,10 @@ function Watchlist() {
         <h2 className="text-center text-2xl">Watchlist:</h2>
         <div className="movies flex overflow-y-auto gap-2 flex-1">
           {watchlist.length ? (
-            watchlist.map((movie: MovieInterface) => (
-              <PopularMovie where="watchlist" movie={movie} key={movie.id} />
-            ))
+            watchlist.map((movie: MovieInterface) => {
+              const key = uniqueId();
+              return <PopularMovie where="watchlist" movie={movie} key={key} />;
+            })
           ) : (
             <p className="text-center w-full">No movies in watchlist yet</p>
           )}

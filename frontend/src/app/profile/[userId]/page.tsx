@@ -19,6 +19,8 @@ import {
   TWachlistReducer,
   watchlistReducer,
 } from "./components/watchListReducer";
+import GenreStats from "./components/GenreStats";
+import UserStats from "../../../../interfaces/UserStats.model";
 
 function Page() {
   const [playlists, setPlaylists] = useState<PlaylistInterface[]>([]);
@@ -26,6 +28,8 @@ function Page() {
     watchlistReducer,
     [] as MovieInterface[]
   );
+  const [userStats, setUserStats] = useState<UserStats>({} as UserStats);
+  const [chartData, setChartData] = useState({} as any);
   return (
     <profileContext.Provider
       value={{
@@ -33,10 +37,16 @@ function Page() {
         watchlistDispatch,
         playlists,
         setPlaylists,
+        userStats,
+        setUserStats,
+        chartData,
+        setChartData,
+        
       }}
     >
       <div>
         <ProfileInfo />
+        <GenreStats />
         <FilterAndSortWatchlist />
         <Watchlist />
         <Playlists />

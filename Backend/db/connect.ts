@@ -1389,19 +1389,19 @@ class Db {
     const playlists = this.getPlaylists(userId);
     const statsProm = await Promise.all([reviews, watchlist, playlists]);
     const [reviewsResult, watchlistResult, playlistsResult] = statsProm;
-    const allMovies = playlistsResult.data?.map((playlist) =>
-      playlist.movies?.map((movie) => movie.genres)
-    );
-    const flatMovies = allMovies?.flat(2);
-    const genres = flatMovies?.map((genre) => genre.name);
-    const countedGenres = _.countBy(genres);
-    const favouriteGenre = _.maxBy(Object.entries(countedGenres), (e) => e[1]);
+    const genres = [
+      ...watchlistResult.data?.flatMap((movie) => movie.genres),
+      ...playlistsResult.data?.flatMap((playlist) =>
+        playlist.movies?.flatMap((movie) => movie.genres)
+      ),
+    ];
+    const genresWithoutDuplicates = _.uniqBy(genres, (genre) => genre.id);
+    const countedGenres = _.countBy(genres, (genre) => genre.name);
     const stats = {
       reviews: reviewsResult.length,
       watchlist: watchlistResult.data.length,
       playlists: playlistsResult.data.length,
-      // allMovies: countedGenres,
-      favouriteGenre,
+      genresStats: countedGenres,
     };
     return { result: true, msg: DBMessage.USER_STATS_FOUND, data: stats };
   }
