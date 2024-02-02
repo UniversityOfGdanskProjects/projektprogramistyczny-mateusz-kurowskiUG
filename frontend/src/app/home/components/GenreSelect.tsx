@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useContext, useEffect } from "react";
 import { homeContext } from "./HomeContext";
+import variables from "../style.module.scss";
 
 function GenreSelect() {
   const { allGenres, setAllGenres, selectRef } = useContext(homeContext);
@@ -24,6 +25,7 @@ function GenreSelect() {
     <>
       <label htmlFor="genre">Genre:</label>
       <select
+        style={{ backgroundColor: variables.whiteColor }}
         ref={selectRef}
         defaultValue={-1}
         name="genre"

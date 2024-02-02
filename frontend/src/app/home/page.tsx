@@ -7,6 +7,7 @@ import FilterMovies from "./components/FilterMovies";
 import Movies from "./components/Movies";
 import MovieInterface from "../../../interfaces/Movie.model";
 import movieReducer from "./components/movieReducer";
+import Colorful from "./components/Colorful";
 
 function HomePage() {
   const [popularMovies, setPopularMovies] = useState<MovieInterface[]>([]);
@@ -34,6 +35,7 @@ function HomePage() {
           <Popular />
           <FilterMovies />
           <Movies />
+          {/* <Colorful /> */}
         </div>
       </homeContext.Provider>
     </>

@@ -4,6 +4,7 @@ import React, { useContext } from "react";
 import GenreSelect from "./GenreSelect";
 import { homeContext } from "./HomeContext";
 import axios from "axios";
+import variables from "../style.module.scss";
 
 function FilterMovies() {
   const loadMovies = async () => {

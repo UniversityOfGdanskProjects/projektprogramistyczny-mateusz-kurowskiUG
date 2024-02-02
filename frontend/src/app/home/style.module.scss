@@ -1,0 +1,23 @@
+// style.module.scss
+
+$randomColors: #ff0000, #00ff00, #0000ff, #ff00ff, #00ffff, #ffff00, #000000,
+  #ffffff, #070350, #f0f0f0;
+
+:export {
+  primaryColor: #ff0000;
+  whiteColor: #ffffff;
+  randomColors: #ff0000, #00ff00, #0000ff, #ff00ff, #00ffff, #ffff00, #000000,
+    #ffffff, #070350, #f0f0f0;
+}
+
+.movieCard {
+  background-color: #070350;
+}
+
+@for $i from 1 through length($randomColors) {
+  $color: nth($randomColors, $i);
+  .colorful-#{$i} {
+    background-color: $color;
+    color: #ffffff; // Adjust the text color as needed
+  }
+}
