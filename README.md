@@ -1,39 +1,18 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-24ddc0f5d75046c5622901739e7c5dd533143b0c8e959d652212380cedb1ea36.svg)](https://classroom.github.com/a/wLNuUf9n)
-[![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-718a45dd9cf7e7f842a935f5ebbe5719a5e09af4491e668f4dbf3b35d5cca122.svg)](https://classroom.github.com/online_ide?assignment_repo_id=12184218&assignment_repo_type=AssignmentRepo)
+### TMDB-API-project
 
-Test users ids:
-fca4b1e4-2f59-4352-bd61-8b3bf804686e
-4ff3819b-501d-458a-a335-c75ec2510a1e
-Test Movies ids:
-6f191db4-2f47-4477-8f0c-f303b1bf6e90
-b47fa852-dec5-408f-a7d7-f8ab62297608
-b47fa852-dec5-408f-a7d7-f8ab62297609
-^^^(clean)^^^
-Test Playlists ids:
-b47fa852-dec5-408f-a7d7-f8ab62297610
-b47fa852-dec5-408f-a7d7-f8ab62297611
-^^empty^^
-test Reviews ids:
-7e927b9c-13a3-42ce-b802-e8efa9b12620
+This project has been created for the purposes of Frontend Development and Databases classes.
+## Technologies
 
-docker-start Neo4j:
-docker run \
- --publish=7474:7474 --publish=7687:7687 \
- --volume=$HOME/neo4j/data:/data \
- neo4j
+- Typescript -> Express.js API
+- React -> Next.js
+- Neo4j
+- TailwindCSS
+  
+# Deployment
 
-docker run \
- -p 7474:7474 -p 7687:7687 \
- -v $PWD/data:/data -v $PWD/plugins:/plugins \
- --name neo4j-apoc \
- -e NEO4J_apoc_export_file_enabled=true \
- -e NEO4J_apoc_import_file_enabled=true \
- -e NEO4J_apoc_import_file_use**neo4j**config=true \
- -e NEO4J_PLUGINS=\[\"apoc-extended\"\] \
- neo4j:{neo4j-version}
-APOC
-uuid 397
-date 962
-export to json EOF
-random text 962
-random nodes EOF
+To start the project:
+
+In `backend` and `frontend` directories:
+
+- `pnpm install`
+- `pnpm start` / `pnpm dev`
