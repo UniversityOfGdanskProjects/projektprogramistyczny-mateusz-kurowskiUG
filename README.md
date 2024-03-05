@@ -1,4 +1,4 @@
-### TMDB-API-project
+# TMDB-API-project
 
 This project has been created for the purposes of Frontend Development and Databases classes.
 ## Technologies
@@ -8,7 +8,7 @@ This project has been created for the purposes of Frontend Development and Datab
 - Neo4j
 - TailwindCSS
   
-# Deployment
+## Deployment
 
 To start the project:
 
