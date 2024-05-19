@@ -1,0 +1,18 @@
+{
+  "name": "bun-setup-template",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@typescript-eslint/eslint-plugin": "^6.4.0",
+    "eslint": "^8.0.1",
+    "eslint-config-love": "latest",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-n": "^15.0.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "prettier-eslint": "^16.3.0"
+  }
+}
