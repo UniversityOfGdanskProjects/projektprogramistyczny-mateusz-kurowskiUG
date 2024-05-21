@@ -1,6 +1,7 @@
 interface INewUser {
-	id?: string;
+	id: string;
 	password: string;
 	email: string;
+	role: string;
 }
 export default INewUser;

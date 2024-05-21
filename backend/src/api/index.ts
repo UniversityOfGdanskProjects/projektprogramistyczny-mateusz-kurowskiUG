@@ -15,7 +15,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 
-// app.use("/api/users", usersRouter);
+app.use("/api/users", usersRouter);
 // app.use("/api/tmdb/movies", TMDBRouter);
 // app.use("/api/watchlist", watchlistRouter);
 // app.use("/api/playlists", playlistsRouter);

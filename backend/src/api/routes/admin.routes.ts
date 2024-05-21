@@ -1,12 +1,13 @@
 import _ from "lodash";
 import { type Request, type Response, Router } from "express";
 import type IMovie from "../../interfaces/movie/IMovie";
-import AdminDB from "../../db/admin/admin";
 import { createId, isCuid } from "@paralleldrive/cuid2";
+import UsersDB from "../../db/users/users";
+import MoviesDB from "../../db/movies/movies";
 
 const adminRouter = Router();
 adminRouter.get("/users", async (request: Request, res: Response) => {
-	const users = await AdminDB.getUsers();
+	const users = await UsersDB.getUsers();
 	if (!users) {
 		return res.status(400).json(users);
 	}
@@ -48,7 +49,7 @@ adminRouter.post("/movies", async (request: Request, res: Response) => {
 		genres,
 		overview: overview || null,
 	};
-	const movie = await AdminDB.createMovie(newMovie);
+	const movie = await MoviesDB.createMovie(newMovie);
 	if (!movie.result) return res.status(400).json(movie);
 
 	return res.status(200).send(movie);
@@ -88,7 +89,7 @@ adminRouter.patch("/movies/:id", async (request: Request, res: Response) => {
 			.status(400)
 			.json({ result: false, msg: "Please add some fields to replace" });
 
-	const updated = await AdminDB.updateMovie(updatedMovie);
+	const updated = await MoviesDB.updateMovie(updatedMovie);
 	if (!updated.result) return res.status(400).json(updated);
 
 	return res.status(200).send(updated);
@@ -103,7 +104,7 @@ adminRouter.delete(
 				.json({ result: false, msg: "Please enter all fields" });
 		}
 
-		const movie = await AdminDB.deleteMovie(movieId);
+		const movie = await MoviesDB.deleteMovie(movieId);
 		if (!movie?.result) {
 			return res.status(400).json(movie);
 		}

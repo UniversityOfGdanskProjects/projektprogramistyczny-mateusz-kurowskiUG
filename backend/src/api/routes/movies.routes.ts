@@ -4,7 +4,7 @@ import MoviesDB from "../../db/movies/movies";
 import IMovie from "../../interfaces/movie/IMovie";
 import { createId, isCuid } from "@paralleldrive/cuid2";
 import IReview from "../../interfaces/review/IReview";
-import INewReview from "../../interfaces/review/INewReview";
+import type INewReview from "../../interfaces/review/INewReview";
 
 const moviesRouter = Router();
 moviesRouter.get("/", async (request: Request, res: Response) => {
