@@ -107,7 +107,7 @@ const updateMovieWithoutGenres = async (
 		};
 	}
 };
-
+// TODO:
 const updateMovieWithGenres = async (
 	movie: IMovie,
 ): Promise<IMovieUpdateResponse> => {
@@ -117,6 +117,7 @@ const updateMovieWithGenres = async (
 			movie,
 		);
 		console.log(records);
+		// biome-ignore lint/complexity/useLiteralKeys: <explanation>
 		const data = records[0].toObject()["m"]["properties"];
 
 		return {
@@ -133,6 +134,21 @@ const updateMovieWithGenres = async (
 	}
 };
 
-const deleteMovie = async () => {};
+const deleteMovie = async (id: string) => {
+	try {
+		const { summary } = await driver.executeQuery(AdminQueries.deleteMovie, {
+			id,
+		});
+		const { counters } = summary;
+		// biome-ignore lint/complexity/useLiteralKeys: <explanation>
+		const deleteCount = counters["_stats"]["nodesDeleted"];
+		if (deleteCount === 0)
+			return { result: false, msg: EDBMessage.MOVIE_NOT_FOUND };
+
+		return { result: true, msg: EDBMessage.MOVIE_DELETED };
+	} catch (e) {
+		return { result: false, msg: EDBMessage.MOVIE_NOT_DELETED };
+	}
+};
 const AdminDB = { getUsers, createMovie, updateMovie, deleteMovie };
 export default AdminDB;

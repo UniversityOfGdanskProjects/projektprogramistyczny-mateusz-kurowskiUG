@@ -76,10 +76,19 @@ export interface IGetMovieResponse {
 		| EDBMessage.USER_NOT_FOUND
 		| EDBMessage.MOVIE_NOT_FOUND
 		| EDBMessage.MOVIE_FOUND
+		| EDBMessage.TMDB_API_ERROR;
+	data: IMovie | undefined;
+}
+export interface IGetMoviesResponse {
+	result: boolean;
+	msg:
+		| EDBMessage.INVALID_QUERY
+		| EDBMessage.GENRE_NOT_FOUND
+		| EDBMessage.USER_NOT_FOUND
 		| EDBMessage.TMDB_API_ERROR
 		| EDBMessage.MOVIES_NOT_FOUND
 		| EDBMessage.MOVIES_FOUND;
-	data: IMovie | IMovie[] | undefined | any;
+	data: IMovie[] | undefined;
 }
 
 export interface IGetGenresReponse {

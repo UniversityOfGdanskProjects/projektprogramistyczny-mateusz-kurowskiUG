@@ -360,25 +360,7 @@ class Database {
 		return { result: true, msg: EDBMessage.GENRES_FOUND, data: genresJson };
 	}
 
-	async getAllMovies(): Promise<IGetMovieResponse> {
-		const movies = await this.movies.all();
-		if (!movies) {
-			return {
-				result: false,
-				msg: EDBMessage.MOVIES_NOT_FOUND,
-				data: undefined,
-			};
-		}
 
-		const moviesJson = await Promise.all(
-			movies.map(async (movie) => {
-				const genres = movie.get("genre").map((genre) => genre.properties());
-				const json = await movie.properties();
-				return { ...json, genres };
-			}),
-		);
-		return { result: true, msg: EDBMessage.MOVIES_FOUND, data: moviesJson };
-	}
 
 	async getMoviesByGenre(genreId: string): Promise<IGetMovieResponse> {
 		const genre = await this.genres.find(genreId);

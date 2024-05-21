@@ -44,9 +44,7 @@ enum AdminQueries {
 		m.backdrop_path = CASE WHEN $backdrop_path IS NOT NULL THEN $backdrop_path ELSE m.backdrop_path END,
 		m.budget = CASE WHEN $budget IS NOT NULL THEN $budget ELSE m.budget END,
 		m.status = CASE WHEN $status IS NOT NULL THEN $status ELSE m.status END
-	RETURN m
-	
-	`,
+	RETURN m`,
 	updateMovieWithGenres = `
 	UNWIND $genres AS genreName
 	MERGE (g:Genre {name: genreName})
@@ -70,9 +68,10 @@ enum AdminQueries {
 	
 	WITH m, g
 	MERGE (m)-[:HAS_GENRE]->(g)
-	RETURN m, g
-	
-	`,
+	RETURN m, g`,
+	deleteMovie = `
+	MATCH (m:Movie {id: $id})
+	DETACH DELETE m`,
 }
 
 export default AdminQueries;

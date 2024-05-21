@@ -2,6 +2,7 @@ import _ from "lodash";
 import { type Request, type Response, Router } from "express";
 import type IMovie from "../../interfaces/IMovie";
 import AdminDB from "../../db/admin/admin";
+import { createId, isCuid } from "@paralleldrive/cuid2";
 
 const adminRouter = Router();
 adminRouter.get("/users", async (request: Request, res: Response) => {
@@ -34,7 +35,7 @@ adminRouter.post("/movies", async (request: Request, res: Response) => {
 
 	// undefined is fine for me, but not for neo4j driver, so null instead of it.
 	const newMovie: IMovie = {
-		id: crypto.randomUUID(),
+		id: createId(),
 		title,
 		release_date: release_date || null,
 		poster_path: poster_path || null,
@@ -52,48 +53,46 @@ adminRouter.post("/movies", async (request: Request, res: Response) => {
 
 	return res.status(200).send(movie);
 });
-adminRouter.patch(
-	"/movies/:movieId",
-	async (request: Request, res: Response) => {
-		const { movieId } = request.params;
-		if (!movieId) return res.status(400).json({ msg: "Please enter movieId" });
-		const {
-			title,
-			release_date,
-			poster_path,
-			backdrop_path,
-			popularity,
-			adult,
-			budget,
-			status,
-			TMDBId,
-			overview,
-		} = request.body;
-		const updatedMovie: IMovie = {
-			id: movieId,
-			title: title || null,
-			release_date: release_date || null,
-			poster_path: poster_path || null,
-			backdrop_path: backdrop_path || null,
-			popularity: popularity || null,
-			adult: adult || null,
-			budget: budget || null,
-			status: status || null,
-			TMDBId: TMDBId || null,
-			overview: overview || null,
-		};
-		const movieValues = _.values(updatedMovie).slice(1);
-		if (movieValues.every((value) => !value))
-			return res
-				.status(400)
-				.json({ result: false, msg: "Please add some fields to replace" });
+adminRouter.patch("/movies/:id", async (request: Request, res: Response) => {
+	const { id } = request.params;
+	if (!id || isCuid(id))
+		return res.status(400).json({ msg: "Invalid movie ID" });
+	const {
+		title,
+		release_date,
+		poster_path,
+		backdrop_path,
+		popularity,
+		adult,
+		budget,
+		status,
+		TMDBId,
+		overview,
+	} = request.body;
+	const updatedMovie: IMovie = {
+		id,
+		title: title || null,
+		release_date: release_date || null,
+		poster_path: poster_path || null,
+		backdrop_path: backdrop_path || null,
+		popularity: popularity || null,
+		adult: adult || null,
+		budget: budget || null,
+		status: status || null,
+		TMDBId: TMDBId || null,
+		overview: overview || null,
+	};
+	const movieValues = _.values(updatedMovie).slice(1);
+	if (movieValues.every((value) => !value))
+		return res
+			.status(400)
+			.json({ result: false, msg: "Please add some fields to replace" });
 
-		const updated = await AdminDB.updateMovie(updatedMovie);
-		if (!updated.result) return res.status(400).json(updated);
+	const updated = await AdminDB.updateMovie(updatedMovie);
+	if (!updated.result) return res.status(400).json(updated);
 
-		return res.status(200).send(updated);
-	},
-);
+	return res.status(200).send(updated);
+});
 adminRouter.delete(
 	"/movies/:movieId",
 	async (request: Request, res: Response) => {

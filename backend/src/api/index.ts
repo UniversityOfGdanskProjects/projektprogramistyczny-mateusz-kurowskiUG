@@ -19,7 +19,7 @@ app.use(cors());
 // app.use("/api/tmdb/movies", TMDBRouter);
 // app.use("/api/watchlist", watchlistRouter);
 // app.use("/api/playlists", playlistsRouter);
-// app.use("/api/movies", moviesRouter);
+app.use("/api/movies", moviesRouter);
 app.use("/api/admin", adminRouter);
 // app.use("/api/cast", castRouter);
 
