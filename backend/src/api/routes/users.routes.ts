@@ -1,7 +1,7 @@
 import { type Request, type Response, Router } from "express";
 import { emailRegex, passwordRegex } from "../../data/regex";
 import db from "../../db/connect";
-import type INewUser from "../../interfaces/INewUser";
+import type INewUser from "../../interfaces/user/INewUser";
 
 const usersRouter = Router();
 

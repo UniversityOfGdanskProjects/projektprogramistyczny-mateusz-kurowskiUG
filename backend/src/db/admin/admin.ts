@@ -1,5 +1,5 @@
-import type IMovie from "../../interfaces/IMovie";
-import type IUser from "../../interfaces/IUser";
+import type IMovie from "../../interfaces/movie/IMovie";
+import type IUser from "../../interfaces/user/IUser";
 import {
 	EDBMessage,
 	type IMovieUpdateResponse,
@@ -91,6 +91,7 @@ const updateMovieWithoutGenres = async (
 			AdminQueries.updateMovieWithoutGenres,
 			movieParams,
 		);
+		// biome-ignore lint/complexity/useLiteralKeys: <explanation>
 		const data = records[0].toObject()["m"]["properties"];
 		return {
 			result: true,

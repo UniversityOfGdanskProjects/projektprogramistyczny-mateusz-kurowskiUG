@@ -1,6 +1,6 @@
 import _ from "lodash";
 import { type Request, type Response, Router } from "express";
-import type IMovie from "../../interfaces/IMovie";
+import type IMovie from "../../interfaces/movie/IMovie";
 import AdminDB from "../../db/admin/admin";
 import { createId, isCuid } from "@paralleldrive/cuid2";
 

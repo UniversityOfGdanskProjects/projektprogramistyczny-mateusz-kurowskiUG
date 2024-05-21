@@ -1,4 +1,4 @@
-import type IMovie from "./IMovie";
+import type IMovie from "./movie/IMovie";
 
 interface IWatchlist {
 	id: string;

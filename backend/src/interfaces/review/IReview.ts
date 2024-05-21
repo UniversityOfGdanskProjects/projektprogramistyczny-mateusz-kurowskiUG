@@ -1,10 +1,9 @@
 interface IReview {
 	id: string;
-	user_id: string;
 	content: string;
+	createdAt: number;
+	movieId: string;
 	rating: number;
-	movie_id: string;
-	date: string;
-	email: string;
+	userId: string;
 }
 export default IReview;

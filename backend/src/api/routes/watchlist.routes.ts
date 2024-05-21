@@ -1,6 +1,6 @@
 import { type Request, type Response, Router } from "express";
 import db from "../../db/connect";
-import INewUser from "../../interfaces/INewUser";
+import INewUser from "../../interfaces/user/INewUser";
 
 const watchlistRouter = Router();
 watchlistRouter.post("/", async (request: Request, res: Response) => {

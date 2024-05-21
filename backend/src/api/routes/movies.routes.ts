@@ -1,8 +1,10 @@
 import { type Request, type Response, Router } from "express";
 import db from "../../db/connect";
 import MoviesDB from "../../db/movies/movies";
-import IMovie from "../../interfaces/IMovie";
+import IMovie from "../../interfaces/movie/IMovie";
 import { createId, isCuid } from "@paralleldrive/cuid2";
+import IReview from "../../interfaces/review/IReview";
+import INewReview from "../../interfaces/review/INewReview";
 
 const moviesRouter = Router();
 moviesRouter.get("/", async (request: Request, res: Response) => {
@@ -42,43 +44,38 @@ moviesRouter.get("/:id", async (request: Request, res: Response) => {
 	return res.status(200).send(movie);
 });
 
-// moviesRouter.post(
-// 	"/:movieId/reviews",
-// 	async (request: Request, res: Response) => {
-// 		const { movieId } = request.params;
-// 		if (!movieId) {
-// 			return res.status(400).send({ message: "Invalid movieId" });
-// 		}
+moviesRouter.post("/:id/reviews", async (request: Request, res: Response) => {
+	const { id } = request.params;
+	if (!id || !isCuid(id))
+		return res.status(400).send({ message: "Invalid movieId" });
 
-// 		const { content, rating, userId } = request.body;
-// 		const numberRating = Number(rating);
-// 		if (
-// 			!content ||
-// 			!numberRating ||
-// 			!userId ||
-// 			numberRating < 0 ||
-// 			numberRating > 10 ||
-// 			content.length < 10 ||
-// 			content.length > 500
-// 		) {
-// 			return res
-// 				.status(400)
-// 				.send({ message: "Invalid content, rating or userId" });
-// 		}
+	const { content, rating, userId, email } = request.body;
+	const numberRating = Number.parseInt(rating, 10);
+	if (
+		!content ||
+		!numberRating ||
+		!userId ||
+		numberRating < 0 ||
+		numberRating > 10 ||
+		content.length < 10 ||
+		content.length > 256
+	)
+		return res
+			.status(400)
+			.send({ message: "Invalid content, rating or userId" });
 
-// 		const review = await db.addReview({
-// 			userId,
-// 			movieId,
-// 			content,
-// 			rating: numberRating,
-// 		});
-// 		if (!review.result) {
-// 			return res.status(400).send(review);
-// 		}
+	const newReview: INewReview = {
+		id: createId(),
+		content,
+		rating: numberRating,
+		userId,
+	};
 
-// 		return res.status(200).send(review);
-// 	},
-// );
+	const review = await MoviesDB.addAReview(id, newReview);
+	if (!review.result) return res.status(400).send(review);
+
+	return res.status(200).send(review);
+});
 // moviesRouter.get(
 // 	"/:movieId/reviews",
 // 	async (request: Request, res: Response) => {

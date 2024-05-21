@@ -1,8 +1,8 @@
-import type IGenre from "./IGenre";
-import type IMovie from "./IMovie";
+import type IGenre from "./genre/IGenre";
+import type IMovie from "./movie/IMovie";
 import type IPlaylist from "./IPlaylist";
-import type { IReview } from "./IReview";
-import type IUser from "./IUser";
+import type { IReview } from "./review/IReview";
+import type IUser from "./user/IUser";
 
 export interface IDBResponse {
 	result: boolean;
