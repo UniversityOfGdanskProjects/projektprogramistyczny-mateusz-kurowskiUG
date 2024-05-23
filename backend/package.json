@@ -10,7 +10,8 @@
     "typescript": "^5.0.0"
   },
   "scripts": {
-    "start": "bun run --watch src/index.ts"
+    "dev": "bun run --watch --env-file=.env.local src/index.ts",
+    "start": "bun run --env-file=.env src/index.ts"
   },
   "dependencies": {
     "@paralleldrive/cuid2": "^2.2.2",

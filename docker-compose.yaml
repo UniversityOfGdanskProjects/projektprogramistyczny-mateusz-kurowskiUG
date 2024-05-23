@@ -2,8 +2,7 @@ services:
   neo4j:
     image: neo4j:4.0
     container_name: neo4j
-    restart: 
-      always
+    restart: always
     ports:
       - "7474:7474"
       - "7687:7687"
@@ -15,3 +14,29 @@ services:
       NEO4J_apoc_import_file_enabled: true
       NEO4J_apoc_import_file_use__neo4j__config: true
       NEO4JLABS_PLUGINS: '["apoc"]'
+
+  keycloak:
+    restart: always
+    image: quay.io/keycloak/keycloak:24.0.4
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    command:
+      - "start-dev"
+
+  backend:
+    # restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend/.env
+    # ports:
+    #   - "${BACKEND_PORT}:${BACKEND_PORT}"
+    depends_on:
+      - neo4j
+      - keycloak
+    working_dir: /backend
+    

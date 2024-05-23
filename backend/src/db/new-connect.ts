@@ -1,7 +1,9 @@
 import neo4j from "neo4j-driver";
 
+const NEO4J_URI = process.env.NEO4J_URI || "neo4j://localhost";
+
 const driver = neo4j.driver(
-	"neo4j://localhost",
+	NEO4J_URI,
 	neo4j.auth.basic("neo4j", "example"),
 );
 try {
