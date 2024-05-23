@@ -3,7 +3,7 @@ type IMovie = {
 	adult: boolean;
 	backdrop_path?: string | null;
 	budget?: number | null;
-	genres?: number[] | null;
+	genres?: string[] | null;
 	id: string;
 	overview?: string | null;
 	popularity?: number | null;

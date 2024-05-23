@@ -3,7 +3,7 @@ import { emailRegex, passwordRegex } from "../../data/regex";
 import db from "../../db/connect";
 import type INewUser from "../../interfaces/user/INewUser";
 import { query, body, validationResult, matchedData } from "express-validator";
-import { newEmailChain, newPasswordChain } from "../../validation/usersChains";
+import { newEmailChain, newPasswordChain } from "../middleware/validators/adminValidators";
 import { createId } from "@paralleldrive/cuid2";
 import UsersDB from "../../db/users/users";
 

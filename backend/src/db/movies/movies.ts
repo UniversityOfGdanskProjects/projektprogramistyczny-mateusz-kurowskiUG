@@ -1,4 +1,5 @@
 import type IMovie from "../../interfaces/movie/IMovie";
+import { IMovieUpdate } from "../../interfaces/movie/IMovieUpdate";
 import type INewReview from "../../interfaces/review/INewReview";
 import type IReview from "../../interfaces/review/IReview";
 import {
@@ -137,14 +138,16 @@ const createMovieWithoutGenres = async (
 		};
 	}
 };
-const updateMovie = async (movie: IMovie): Promise<IMovieUpdateResponse> => {
+const updateMovie = async (
+	movie: IMovieUpdate,
+): Promise<IMovieUpdateResponse> => {
 	const { genres, ...movieParams } = movie;
 	if (!genres || genres.length === 0) return updateMovieWithoutGenres(movie);
 	return updateMovieWithGenres(movie);
 };
 
 const updateMovieWithoutGenres = async (
-	movie: IMovie,
+	movie: IMovieUpdate,
 ): Promise<IMovieUpdateResponse> => {
 	const { genres, ...movieParams } = movie;
 	try {

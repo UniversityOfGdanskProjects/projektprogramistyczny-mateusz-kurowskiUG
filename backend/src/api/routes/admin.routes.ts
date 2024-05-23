@@ -5,6 +5,12 @@ import { createId, isCuid } from "@paralleldrive/cuid2";
 import UsersDB from "../../db/users/users";
 import MoviesDB from "../../db/movies/movies";
 import { Hono } from "hono";
+import {
+	addMovieBodyValidator,
+	deleteMovieParamsValidator,
+	updateMovieBodyValidator,
+} from "../middleware/validators/adminValidators";
+import type { IMovieUpdate } from "../../interfaces/movie/IMovieUpdate";
 
 const adminRouter = new Hono();
 adminRouter.get("/users", async (c) => {
@@ -14,23 +20,20 @@ adminRouter.get("/users", async (c) => {
 	return c.json(users);
 });
 
-adminRouter.post("/movies", async (c) => {
+adminRouter.post("/movies", addMovieBodyValidator(), async (c) => {
 	const {
 		title,
-		release_date,
-		poster_path,
-		backdrop_path,
-		popularity,
 		adult,
-		budget,
-		status,
-		TMDBId,
 		genres,
+		TMDBId,
+		backdrop_path,
+		budget,
 		overview,
-	} = await c.req.json();
-	if (!adult || !title) return;
-	c.json({ result: false, msg: "Please enter all fields" }, 400);
-
+		popularity,
+		poster_path,
+		release_date,
+		status,
+	} = c.req.valid("json");
 	// undefined is fine for me, but not for neo4j driver, so null instead of it.
 	const newMovie: IMovie = {
 		id: createId(),
@@ -49,9 +52,9 @@ adminRouter.post("/movies", async (c) => {
 	const movie = await MoviesDB.createMovie(newMovie);
 	if (!movie.result) return c.json(movie, 400);
 
-	return c.json(movie, 200);
+	return c.json(movie, 201);
 });
-adminRouter.patch("/movies/:id", async (c) => {
+adminRouter.patch("/movies/:id", updateMovieBodyValidator(), async (c) => {
 	const { id } = c.req.param();
 	if (!id || isCuid(id)) return c.json({ msg: "Invalid movie ID" }, 400);
 	const {
@@ -65,8 +68,8 @@ adminRouter.patch("/movies/:id", async (c) => {
 		status,
 		TMDBId,
 		overview,
-	} = await c.req.json();
-	const updatedMovie: IMovie = {
+	} = await c.req.valid("json");
+	const updatedMovie: IMovieUpdate = {
 		id,
 		title: title || null,
 		release_date: release_date || null,
@@ -91,13 +94,10 @@ adminRouter.patch("/movies/:id", async (c) => {
 
 	return c.json(updated, 200);
 });
-adminRouter.delete("/movies/:movieId", async (c) => {
-	const { movieId } = c.req.param();
-	if (!movieId) {
-		return c.json({ result: false, msg: "Please enter all fields" }, 400);
-	}
+adminRouter.delete("/movies/:id", deleteMovieParamsValidator(), async (c) => {
+	const { id } = c.req.valid("param");
 
-	const movie = await MoviesDB.deleteMovie(movieId);
+	const movie = await MoviesDB.deleteMovie(id);
 	if (!movie?.result) {
 		return c.json(movie, 400);
 	}
