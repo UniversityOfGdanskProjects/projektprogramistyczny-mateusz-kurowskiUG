@@ -5,51 +5,46 @@ import IMovie from "../../interfaces/movie/IMovie";
 import { createId, isCuid } from "@paralleldrive/cuid2";
 import IReview from "../../interfaces/review/IReview";
 import type INewReview from "../../interfaces/review/INewReview";
+import { Hono } from "hono";
 
-const moviesRouter = Router();
-moviesRouter.get("/", async (request: Request, res: Response) => {
+const moviesRouter = new Hono();
+moviesRouter.get("/", async (c) => {
 	const movies = await MoviesDB.getAllMovies();
-	if (!movies.result) return res.status(400).send(movies);
+	if (!movies.result) return c.json(movies, 400);
 
-	return res.status(200).send(movies);
+	return c.json(movies, 200);
 });
 
-moviesRouter.get("/page", async (request: Request, res: Response) => {
-	const { pageNumber, pageSize } = request.query;
-	const page = Number.parseInt(pageNumber as string, 10) || 1;
-	const size = Number.parseInt(pageSize as string, 10) || 10;
+moviesRouter.get("/page", async (c) => {
+	const { pageNumber, pageSize } = c.req.query();
+	const page = Number.parseInt(pageNumber, 10) || 1;
+	const size = Number.parseInt(pageSize, 10) || 10;
 	const moviesResponse = await MoviesDB.getAllMovies();
 	if (!moviesResponse.result || !moviesResponse.data)
-		return res.status(400).send(moviesResponse);
+		return c.json(moviesResponse, 400);
 	const movies = moviesResponse.data.slice((page - 1) * size, page * size);
-	if (!page)
-		return res.status(400).send({ result: false, message: "Invalid page" });
+	if (!page) return c.json({ result: false, message: "Invalid page" }, 400);
 
-	return res
-		.status(200)
-		.send({ result: true, data: movies, message: "Movies found" });
+	return c.json({ result: true, data: movies, message: "Movies found" }, 200);
 });
 
-moviesRouter.get("/:id", async (request: Request, res: Response) => {
-	const { id } = request.params;
-	if (!isCuid(id))
-		return res.status(400).send({ result: false, message: "Invalid id" });
+moviesRouter.get("/:id", async (c) => {
+	const { id } = c.req.param();
+	if (!isCuid(id)) return c.json({ result: false, message: "Invalid id" }, 400);
 	const trimmedId = id.trim();
-	if (!trimmedId)
-		return res.status(400).send({ result: false, message: "Invalid id" });
+	if (!trimmedId) return c.json({ result: false, message: "Invalid id" }, 400);
 
 	const movie = await MoviesDB.getMovieById(id);
-	if (!movie.result) return res.status(400).send(movie);
+	if (!movie.result) return c.json(movie, 400);
 
-	return res.status(200).send(movie);
+	return c.json(movie, 200);
 });
 
-moviesRouter.post("/:id/reviews", async (request: Request, res: Response) => {
-	const { id } = request.params;
-	if (!id || !isCuid(id))
-		return res.status(400).send({ message: "Invalid movieId" });
+moviesRouter.post("/:id/reviews", async (c) => {
+	const { id } = c.req.param();
+	if (!id || !isCuid(id)) return c.json({ message: "Invalid movieId" }, 400);
 
-	const { content, rating, userId, email } = request.body;
+	const { content, rating, userId } = await c.req.json();
 	const numberRating = Number.parseInt(rating, 10);
 	if (
 		!content ||
@@ -60,9 +55,7 @@ moviesRouter.post("/:id/reviews", async (request: Request, res: Response) => {
 		content.length < 10 ||
 		content.length > 256
 	)
-		return res
-			.status(400)
-			.send({ message: "Invalid content, rating or userId" });
+		return c.json({ message: "Invalid content, rating or userId" }, 400);
 
 	const newReview: INewReview = {
 		id: createId(),
@@ -72,9 +65,9 @@ moviesRouter.post("/:id/reviews", async (request: Request, res: Response) => {
 	};
 
 	const review = await MoviesDB.addAReview(id, newReview);
-	if (!review.result) return res.status(400).send(review);
+	if (!review.result) return c.json(review, 400);
 
-	return res.status(200).send(review);
+	return c.json(review, 200);
 });
 // moviesRouter.get(
 // 	"/:movieId/reviews",
