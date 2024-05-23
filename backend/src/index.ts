@@ -1,4 +1,4 @@
-import app from "./api";
+import app from "./api/main";
 import driver from "./db/new-connect";
 const PORT = process.env.PORT || 3000;
 

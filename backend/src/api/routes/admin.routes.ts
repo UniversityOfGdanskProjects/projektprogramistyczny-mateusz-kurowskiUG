@@ -1,21 +1,20 @@
 import _ from "lodash";
-import { type Request, type Response, Router } from "express";
+
 import type IMovie from "../../interfaces/movie/IMovie";
 import { createId, isCuid } from "@paralleldrive/cuid2";
 import UsersDB from "../../db/users/users";
 import MoviesDB from "../../db/movies/movies";
+import { Hono } from "hono";
 
-const adminRouter = Router();
-adminRouter.get("/users", async (request: Request, res: Response) => {
+const adminRouter = new Hono();
+adminRouter.get("/users", async (c) => {
 	const users = await UsersDB.getUsers();
-	if (!users) {
-		return res.status(400).json(users);
-	}
+	if (!users) return c.json({ result: false, msg: "No users found" }, 400);
 
-	return res.status(200).send(users);
+	return c.json(users);
 });
 
-adminRouter.post("/movies", async (request: Request, res: Response) => {
+adminRouter.post("/movies", async (c) => {
 	const {
 		title,
 		release_date,
@@ -28,11 +27,9 @@ adminRouter.post("/movies", async (request: Request, res: Response) => {
 		TMDBId,
 		genres,
 		overview,
-	} = request.body;
-	if (!adult || !title)
-		return res
-			.status(400)
-			.json({ result: false, msg: "Please enter all fields" });
+	} = await c.req.json();
+	if (!adult || !title) return;
+	c.json({ result: false, msg: "Please enter all fields" }, 400);
 
 	// undefined is fine for me, but not for neo4j driver, so null instead of it.
 	const newMovie: IMovie = {
@@ -50,14 +47,13 @@ adminRouter.post("/movies", async (request: Request, res: Response) => {
 		overview: overview || null,
 	};
 	const movie = await MoviesDB.createMovie(newMovie);
-	if (!movie.result) return res.status(400).json(movie);
+	if (!movie.result) return c.json(movie, 400);
 
-	return res.status(200).send(movie);
+	return c.json(movie, 200);
 });
-adminRouter.patch("/movies/:id", async (request: Request, res: Response) => {
-	const { id } = request.params;
-	if (!id || isCuid(id))
-		return res.status(400).json({ msg: "Invalid movie ID" });
+adminRouter.patch("/movies/:id", async (c) => {
+	const { id } = c.req.param();
+	if (!id || isCuid(id)) return c.json({ msg: "Invalid movie ID" }, 400);
 	const {
 		title,
 		release_date,
@@ -69,7 +65,7 @@ adminRouter.patch("/movies/:id", async (request: Request, res: Response) => {
 		status,
 		TMDBId,
 		overview,
-	} = request.body;
+	} = await c.req.json();
 	const updatedMovie: IMovie = {
 		id,
 		title: title || null,
@@ -85,31 +81,27 @@ adminRouter.patch("/movies/:id", async (request: Request, res: Response) => {
 	};
 	const movieValues = _.values(updatedMovie).slice(1);
 	if (movieValues.every((value) => !value))
-		return res
-			.status(400)
-			.json({ result: false, msg: "Please add some fields to replace" });
+		return c.json(
+			{ result: false, msg: "Please add some fields to replace" },
+			400,
+		);
 
 	const updated = await MoviesDB.updateMovie(updatedMovie);
-	if (!updated.result) return res.status(400).json(updated);
+	if (!updated.result) return c.json(updated, 400);
 
-	return res.status(200).send(updated);
+	return c.json(updated, 200);
 });
-adminRouter.delete(
-	"/movies/:movieId",
-	async (request: Request, res: Response) => {
-		const { movieId } = request.params;
-		if (!movieId) {
-			return res
-				.status(400)
-				.json({ result: false, msg: "Please enter all fields" });
-		}
+adminRouter.delete("/movies/:movieId", async (c) => {
+	const { movieId } = c.req.param();
+	if (!movieId) {
+		return c.json({ result: false, msg: "Please enter all fields" }, 400);
+	}
 
-		const movie = await MoviesDB.deleteMovie(movieId);
-		if (!movie?.result) {
-			return res.status(400).json(movie);
-		}
+	const movie = await MoviesDB.deleteMovie(movieId);
+	if (!movie?.result) {
+		return c.json(movie, 400);
+	}
 
-		return res.status(200).send(movie);
-	},
-);
+	return c.json(movie, 200);
+});
 export default adminRouter;
