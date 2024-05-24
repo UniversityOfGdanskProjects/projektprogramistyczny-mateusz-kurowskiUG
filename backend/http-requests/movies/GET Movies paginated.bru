@@ -1,0 +1,16 @@
+meta {
+  name: GET Movies paginated
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:5000/api/movies/page?pageSize=10&pageNumber=23
+  body: none
+  auth: none
+}
+
+query {
+  pageSize: 10
+  pageNumber: 23
+}

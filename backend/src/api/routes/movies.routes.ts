@@ -6,6 +6,10 @@ import { createId, isCuid } from "@paralleldrive/cuid2";
 import IReview from "../../interfaces/review/IReview";
 import type INewReview from "../../interfaces/review/INewReview";
 import { Hono } from "hono";
+import {
+	getMovieValidator,
+	moviesPaginatedValidator,
+} from "../middleware/validators/movieValidators";
 
 const moviesRouter = new Hono();
 moviesRouter.get("/", async (c) => {
@@ -15,20 +19,19 @@ moviesRouter.get("/", async (c) => {
 	return c.json(movies, 200);
 });
 
-moviesRouter.get("/page", async (c) => {
-	const { pageNumber, pageSize } = c.req.query();
-	const page = Number.parseInt(pageNumber, 10) || 1;
-	const size = Number.parseInt(pageSize, 10) || 10;
-	const moviesResponse = await MoviesDB.getAllMovies();
+moviesRouter.get("/page", moviesPaginatedValidator(), async (c) => {
+	const { pageNumber, pageSize } = c.req.valid("query");
+
+	const moviesResponse = await MoviesDB.getPaginatedMovies(
+		+pageNumber,
+		+pageSize,
+	);
 	if (!moviesResponse.result || !moviesResponse.data)
 		return c.json(moviesResponse, 400);
-	const movies = moviesResponse.data.slice((page - 1) * size, page * size);
-	if (!page) return c.json({ result: false, message: "Invalid page" }, 400);
-
-	return c.json({ result: true, data: movies, message: "Movies found" }, 200);
+	return c.json(moviesResponse, 200);
 });
 
-moviesRouter.get("/:id", async (c) => {
+moviesRouter.get("/:id", getMovieValidator(), async (c) => {
 	const { id } = c.req.param();
 	if (!isCuid(id)) return c.json({ result: false, message: "Invalid id" }, 400);
 	const trimmedId = id.trim();
@@ -39,7 +42,7 @@ moviesRouter.get("/:id", async (c) => {
 
 	return c.json(movie, 200);
 });
-
+//todo: add a review to a movie
 moviesRouter.post("/:id/reviews", async (c) => {
 	const { id } = c.req.param();
 	if (!id || !isCuid(id)) return c.json({ message: "Invalid movieId" }, 400);

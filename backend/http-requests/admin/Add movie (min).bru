@@ -1,0 +1,21 @@
+meta {
+  name: Add movie (min)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {
+  "title":"new Movie1",
+  "adult":false
+}http://localhost:5000/api/admin/movies
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "title":"new Movie1",
+    "adult":false
+  }
+}
