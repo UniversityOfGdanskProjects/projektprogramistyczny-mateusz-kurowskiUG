@@ -46,7 +46,7 @@ adminRouter.post("/movies", addMovieBodyValidator(), async (c) => {
 		budget: budget || null,
 		status: status || null,
 		TMDBId: TMDBId || null,
-		genres,
+		genres: genres || null,
 		overview: overview || null,
 	};
 	const movie = await MoviesDB.createMovie(newMovie);

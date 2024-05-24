@@ -1,0 +1,35 @@
+meta {
+  name: Add movie (max)
+  type: http
+  seq: 4
+}
+
+post {
+  url: Query2
+Body
+Headers
+Auth
+Vars
+Script
+Assert
+Tests
+Docs
+http://localhost:5000/api/admin/movies
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "title":"full movie",
+    "release_date":"02-02-2002",
+    "poster_path":"link1",
+    "backdrop_path":"link2",
+    "popularity":1,
+    "adult":true,
+    "budget":10000,
+    "status":"done",
+    "TMDBId":1,
+    "overview":"awesome"
+  }
+}

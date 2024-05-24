@@ -9,6 +9,11 @@ enum EMovieQueries {
 	CREATE (r)-[:REVIEWS]->(m)
 	RETURN r
 	`,
+	GET_MOVIE_PAGE = `
+	MATCH (m:Movie)
+	RETURN m
+	SKIP toInteger(($pageNumber - 1) * $pageSize)
+	LIMIT toInteger($pageSize)`,
 	CREATE_MOVIE_WITHOUT_GENRES = `
 	CALL apoc.create.node(['Movie'], {
 		id: $id,
