@@ -13,7 +13,7 @@ const app = new Hono({ strict: true }).basePath("/api");
 app.use(logger());
 app.use(cors());
 
-// app.route("/users", usersRouter);
+app.route("/users", usersRouter);
 // app.route("/tmdb/movies", TMDBRouter);
 // app.route("/watchlist", watchlistRouter);
 // app.route("/playlists", playlistsRouter);
