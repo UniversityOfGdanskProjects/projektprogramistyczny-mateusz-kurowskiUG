@@ -5,7 +5,10 @@ import type INewUser from "../../interfaces/user/INewUser";
 import { query, body, validationResult, matchedData } from "express-validator";
 import { createId } from "@paralleldrive/cuid2";
 import UsersDB from "../../db/users/users";
-import { newUserValidator } from "../middleware/validators/userValidators";
+import {
+	deleteUserValidator,
+	newUserValidator,
+} from "../middleware/validators/userValidators";
 import { Hono } from "hono";
 
 const usersRouter = new Hono();
@@ -108,5 +111,11 @@ usersRouter.post(
 
 // 	return res.status(200).json(statsResult);
 // });
+
+usersRouter.delete("/:id", deleteUserValidator(), async (c) => {
+	const { id } = c.req.valid("param");
+	const deleteResult = await UsersDB.deleteUser(id);
+	return c.json(deleteResult, 200);
+});
 
 export default usersRouter;

@@ -1,5 +1,6 @@
 import {
 	EDBMessage,
+	IUserDeletionResponse,
 	type IUserCreationResponse,
 } from "../../interfaces/TDBResponse";
 import type INewUser from "../../interfaces/user/INewUser";
@@ -57,9 +58,41 @@ const createUser = async (user: INewUser): Promise<IUserCreationResponse> => {
 	}
 };
 
+// todo : fix this
+const deleteUser = async (id: string): Promise<IUserDeletionResponse> => {
+	try {
+		const { records } = await driver.executeQuery(EUsersQueries.DELETE_USER, {
+			id,
+		});
+		const deletedUser = records.map(
+			// biome-ignore lint/complexity/useLiteralKeys: <explanation>
+			(record) => record.toObject()["n"]["properties"] as IUser,
+		)[0];
+		if (!deletedUser) {
+			return {
+				result: false,
+				msg: EDBMessage.USER_NOT_DELETED,
+				data: undefined,
+			};
+		}
+		const { password, role, ...deletedUserSanitized } = deletedUser;
+		// todo: this returns {} as data for some reason
+		return {
+			result: true,
+			msg: EDBMessage.USER_DELETED,
+			data: deletedUserSanitized,
+		};
+	} catch (e) {
+		console.log(e);
+
+		return { result: false, msg: EDBMessage.USER_NOT_DELETED, data: undefined };
+	}
+};
+
 const UsersDB = {
 	createUser,
 	getUsers,
 	doesUserExist,
+	deleteUser,
 };
 export default UsersDB;
