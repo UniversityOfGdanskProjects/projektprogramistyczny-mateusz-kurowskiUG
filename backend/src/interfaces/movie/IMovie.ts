@@ -1,4 +1,4 @@
-type IMovie = {
+interface IMovie {
 	TMDBId?: number | null;
 	adult: boolean;
 	backdrop_path?: string | null;
@@ -11,5 +11,5 @@ type IMovie = {
 	release_date?: string | null;
 	status?: string | null;
 	title: string;
-};
+}
 export default IMovie;

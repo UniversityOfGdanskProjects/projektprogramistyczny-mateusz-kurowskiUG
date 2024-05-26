@@ -1,5 +1,6 @@
 import { validator } from "hono/validator";
 import { z } from "zod";
+import idValidator from "./idParamValidator";
 const newMovieSchema = z.object(
 	{
 		title: z.string(),
@@ -33,13 +34,6 @@ const updateMovieSchema = z.object(
 	{ message: "Invalid movie data" },
 );
 
-const deleteMovieSchema = z.object(
-	{
-		id: z.string().cuid2("Invalid movie ID"),
-	},
-	{ message: "Invalid movie ID" },
-);
-
 export const addMovieBodyValidator = () =>
 	validator("json", (value, c) => {
 		const parsed = newMovieSchema.safeParse(value);
@@ -53,13 +47,5 @@ export const updateMovieBodyValidator = () =>
 		const parsed = updateMovieSchema.safeParse(value);
 		if (!parsed.success)
 			return c.json({ message: `Invalid body ${parsed.error}` }, 400);
-		return parsed.data;
-	});
-
-export const deleteMovieParamsValidator = () =>
-	validator("param", (value, c) => {
-		const parsed = deleteMovieSchema.safeParse(value);
-		if (!parsed.success)
-			return c.json({ message: `invalid param: id ${parsed.error}` }, 400);
 		return parsed.data;
 	});

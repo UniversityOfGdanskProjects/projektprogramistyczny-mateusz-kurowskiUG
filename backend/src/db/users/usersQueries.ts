@@ -10,6 +10,9 @@ enum EUsersQueries {
 	DETACH DELETE n
 	RETURN n
 	`,
+	GET_USER_BY_ID = `
+	MATCH (n:User {id: $id})
+	RETURN n`,
 }
 
 export default EUsersQueries;

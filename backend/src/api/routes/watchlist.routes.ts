@@ -1,46 +1,45 @@
-import { type Request, type Response, Router } from "express";
 import db from "../../db/connect";
 import INewUser from "../../interfaces/user/INewUser";
+import { Hono } from "hono";
+import { addToWatchlistValidator } from "../middleware/validators/watchlistValidators";
+import Watchlist from "../../db/watchlists/watchlist";
+import idParamValidator, {
+	movieIdParamValidator,
+	userIdParamValidator,
+} from "../middleware/validators/idParamValidator";
 
-const watchlistRouter = Router();
-watchlistRouter.post("/", async (request: Request, res: Response) => {
-	const { userId, movieId } = request.body;
-	if (!userId || !movieId) {
-		return res.status(400).json({ msg: "Please enter all fields" });
-	}
+// TODO: TEST THIS FILE
+const watchlistRouter = new Hono();
 
-	const watchlistResult = await db.addToWatchlist(userId, movieId);
-	if (!watchlistResult.result) {
-		return res.status(400).json(watchlistResult);
-	}
+watchlistRouter.post("/", addToWatchlistValidator(), async (c) => {
+	const { userId, movieId } = c.req.valid("json");
 
-	return res.status(200).json(watchlistResult);
+	const watchlistResult = await Watchlist.addToWatchlist(userId, movieId);
+	if (!watchlistResult.result) return c.json(watchlistResult, 400);
+
+	return c.json(watchlistResult, 200);
 });
-watchlistRouter.get("/:userId", async (request: Request, res: Response) => {
-	const { userId } = request.params;
-	if (!userId) {
-		return res.status(400).json({ msg: "Please enter all fields" });
-	}
 
-	const watchlistResult = await db.getWatchlist(userId);
-	if (!watchlistResult.result) {
-		return res.status(400).json(watchlistResult);
-	}
+// INFO: This is user ID below in the slug.
+watchlistRouter.get("/:userId", userIdParamValidator(), async (c) => {
+	const { userId } = c.req.valid("param");
 
-	return res.status(200).json(watchlistResult);
+	const watchlistResult = await Watchlist.getWatchlist(userId);
+	if (!watchlistResult.result) return c.json(watchlistResult, 400);
+
+	return c.json(watchlistResult, 200);
 });
-watchlistRouter.delete("/:id", async (request: Request, res: Response) => {
-	const movieId = request.params.id;
-	const { userId } = request.body;
-	if (!userId || !movieId) {
-		return res.status(400).json({ msg: "Please enter all fields" });
-	}
+watchlistRouter.delete(
+	"/:userId/:movieId:",
+	userIdParamValidator(),
+	movieIdParamValidator(),
+	async (c) => {
+		const { userId, movieId } = c.req.valid("param");
 
-	const watchlistResult = await db.deleteFromWatchlist(userId, movieId);
-	if (!watchlistResult.result) {
-		return res.status(400).json(watchlistResult);
-	}
+		const watchlistResult = await db.deleteFromWatchlist(userId, movieId);
+		if (!watchlistResult.result) return c.json(watchlistResult, 400);
 
-	return res.status(200).json(watchlistResult);
-});
+		return c.json(watchlistResult, 200);
+	},
+);
 export default watchlistRouter;
