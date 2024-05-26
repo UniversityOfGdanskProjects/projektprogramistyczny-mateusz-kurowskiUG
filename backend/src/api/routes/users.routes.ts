@@ -8,7 +8,7 @@ import UsersDB from "../../db/users/users";
 import {
 	deleteUserValidator,
 	newUserValidator,
-} from "../middleware/validators/userValidators";
+} from "../middleware/validators/user-validators";
 import { Hono } from "hono";
 
 const usersRouter = new Hono();

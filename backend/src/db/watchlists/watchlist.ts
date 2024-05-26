@@ -59,6 +59,6 @@ const deleteFromWatchlist = async (userId: string, movieId: string) => {
 	}
 };
 
-const Watchlist = { getWatchlist, addToWatchlist, deleteFromWatchlist };
+const WatchlistDB = { getWatchlist, addToWatchlist, deleteFromWatchlist };
 
-export default Watchlist;
+export default WatchlistDB;

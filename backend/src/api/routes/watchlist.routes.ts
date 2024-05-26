@@ -1,12 +1,12 @@
 import db from "../../db/connect";
 import INewUser from "../../interfaces/user/INewUser";
 import { Hono } from "hono";
-import { addToWatchlistValidator } from "../middleware/validators/watchlistValidators";
+import { addToWatchlistValidator } from "../middleware/validators/watchlist-validators";
 import Watchlist from "../../db/watchlists/watchlist";
 import idParamValidator, {
 	movieIdParamValidator,
 	userIdParamValidator,
-} from "../middleware/validators/idParamValidator";
+} from "../middleware/validators/id-param-validator";
 
 // TODO: TEST THIS FILE
 const watchlistRouter = new Hono();

@@ -9,7 +9,7 @@ import { Hono } from "hono";
 import {
 	getMovieValidator,
 	moviesPaginatedValidator,
-} from "../middleware/validators/movieValidators";
+} from "../middleware/validators/movie-validators";
 
 const moviesRouter = new Hono();
 moviesRouter.get("/", async (c) => {

@@ -1,6 +1,6 @@
 import { validator } from "hono/validator";
 import { z } from "zod";
-import idValidator from "./idParamValidator";
+import idValidator from "./id-param-validator";
 const newMovieSchema = z.object(
 	{
 		title: z.string(),

@@ -8,10 +8,10 @@ import { Hono } from "hono";
 import {
 	addMovieBodyValidator,
 	updateMovieBodyValidator,
-} from "../middleware/validators/adminValidators";
+} from "../middleware/validators/admin-validators";
 import idValidator, {
 	idParamValidator,
-} from "../middleware/validators/idParamValidator";
+} from "../middleware/validators/id-param-validator";
 import type IMovieUpdate from "../../interfaces/movie/IMovieUpdate";
 
 const adminRouter = new Hono();
