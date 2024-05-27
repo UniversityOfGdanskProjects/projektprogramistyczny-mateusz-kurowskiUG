@@ -1,129 +1,65 @@
 import { Hono } from "hono";
 import PlaylistDB from "../../db/playlists/playlists";
-import { newPlaylistValidator } from "../middleware/validators/playlist-validators";
-
+import {
+  newPlaylistValidator,
+  playlistUpdateValidator,
+} from "../middleware/validators/playlist-validators";
+import {
+  playlistIdParamValidator,
+  userIdParamValidator,
+} from "../middleware/validators/id-param-validator";
+import * as _ from "lodash";
 const playlistsRouter = new Hono();
 
 playlistsRouter.post("/", newPlaylistValidator(), async (c) => {
-	const { userId, name } = c.req.valid("json");
-
-	const createResult = await PlaylistDB.createPlaylist(userId, name);
-	if (!createResult.result) return c.json(createResult, 400);
-
-	return c.json(createResult, 200);
+  const { userId, name } = c.req.valid("json");
+  const createResult = await PlaylistDB.createPlaylist(userId, name);
+  if (!createResult.result) return c.json(createResult, 400);
+  return c.json(createResult, 200);
 });
 
-// playlistsRouter.get("/:userId", async (c) => {
-// 	const { userId } = request.params;
-// 	if (!userId) {
-// 		return res
-// 			.status(400)
-// 			.json({ msg: "Please enter all fields", result: false });
-// 	}
+playlistsRouter.get("/user/:userId", userIdParamValidator(), async (c) => {
+  const { userId } = c.req.valid("param");
 
-// 	const playlistResult = await PlaylistDB.getPlaylists(userId);
-// 	if (!playlistResult.result) {
-// 		return res.status(400).json(playlistResult);
-// 	}
+  const playlistResult = await PlaylistDB.getUsersPlaylists(userId);
+  if (!playlistResult.result) return c.json(playlistResult, 400);
 
-// 	return res.status(200).json(playlistResult);
-// });
+  return c.json(playlistResult, 200);
+});
+playlistsRouter.get("/:playlistId", playlistIdParamValidator(), async (c) => {
+  const { playlistId } = c.req.valid("param");
 
-// playlistsRouter.patch("/:playlistId", async (c) => {
-// 	const { playlistId } = request.params;
-// 	if (!playlistId) {
-// 		return res
-// 			.status(400)
-// 			.json({ msg: "Please enter all fields", result: false });
-// 	}
+  const playlistResult = await PlaylistDB.getPlaylistById(playlistId);
+  if (!playlistResult.result) return c.json(playlistResult, 400);
 
-// 	const { name, movieId, action } = request.body;
-// 	if (!name && !movieId && !action) {
-// 		return res.status(400).json({ msg: "No fields provided", result: false });
-// 	}
+  return c.json(playlistResult, 200);
+});
 
-// 	if ((movieId && !action) || (action && !movieId)) {
-// 		return res
-// 			.status(400)
-// 			.json({ msg: "No movie or action provided", result: false });
-// 	}
+playlistsRouter.patch(
+  "/:playlistId",
+  playlistIdParamValidator(),
+  playlistUpdateValidator(),
+  async (c) => {
+    const { playlistId } = c.req.valid("param");
+    const { name, add, remove } = c.req.valid("json");
+    const newProps = _.omitBy({ name, add, remove }, _.isNil);
+    if (newProps) return c.json("Invalid body", 400);
+    const updateResult = await PlaylistDB.updatePlaylist(playlistId, newProps);
+    if (!updateResult.result) return c.json(updateResult, 400);
+    return c.json(updateResult, 200);
+  }
+);
 
-// 	const playlist = await PlaylistDB.getPlaylistById(playlistId);
-// 	if (!playlist.result) {
-// 		return res.status(400).json(playlist);
-// 	}
+playlistsRouter.delete(
+  "/:playlistId",
+  playlistIdParamValidator(),
+  async (c) => {
+    const { playlistId } = c.req.valid("param");
+    const playlistResult = await PlaylistDB.deletePlaylist(playlistId);
 
-// 	const rename: Record<string, unknown> = {
-// 		result: false,
-// 		msg: "Playlist not renamed",
-// 		data: undefined,
-// 	};
+    if (!playlistResult.result) return c.json(playlistResult, 400);
 
-// 	if (name) {
-// 		const result = await PlaylistDB.renamePlaylist(playlistId, name);
-// 		if (!result.result) {
-// 			return res.status(400).json(result);
-// 		}
-
-// 		rename.result = true;
-// 		rename.msg = "Playlist renamed";
-// 	}
-
-// 	if (!movieId) {
-// 		return res.status(200).json({ msg: "Playlist updated", rename });
-// 	}
-
-// 	const movie = await PlaylistDB.getMovieById(movieId);
-// 	if (!movie.result) {
-// 		return res.status(400).json({ ...movie, rename });
-// 	}
-
-// 	switch (action) {
-// 		case EUpdateAction.add: {
-// 			const addedToPlaylist = await PlaylistDB.addToPlaylist(
-// 				playlistId,
-// 				movieId,
-// 			);
-// 			if (!addedToPlaylist.result) {
-// 				return res.status(400).json({ ...addedToPlaylist, rename });
-// 			}
-
-// 			return res.status(200).json({ ...addedToPlaylist, rename });
-// 		}
-
-// 		case EUpdateAction.remove: {
-// 			const removedFromPlaylist = await PlaylistDB.removeFromPlaylist(
-// 				playlistId,
-// 				movieId,
-// 			);
-// 			if (!removedFromPlaylist.result) {
-// 				return res.status(400).json({ ...removedFromPlaylist, rename });
-// 			}
-
-// 			return res.status(200).json({ ...removedFromPlaylist, rename });
-// 		}
-
-// 		case undefined: {
-// 			return res.status(400).json({ rename });
-// 		}
-
-// 		default: {
-// 			return res.status(400).json({ msg: "Invalid action", rename });
-// 		}
-// 	}
-// });
-
-// playlistsRouter.delete("/:playlistId", async (c) => {
-// 	const { playlistId } = request.params;
-// 	if (!playlistId) {
-// 		return res.status(400).json({ msg: "Please enter all fields" });
-// 	}
-
-// 	const playlistResult = await PlaylistDB.deletePlaylist(playlistId);
-// 	if (!playlistResult.result) {
-// 		return res.status(400).json(playlistResult);
-// 	}
-
-// 	return res.status(200).json(playlistResult);
-// });
+    return c.json(playlistResult, 200);
+  }
+);
 export default playlistsRouter;

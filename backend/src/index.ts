@@ -16,7 +16,7 @@ app.use(cors());
 app.route("/users", usersRouter);
 // app.route("/tmdb/movies", TMDBRouter);
 // app.route("/watchlist", watchlistRouter);
-// app.route("/playlists", playlistsRouter);
+app.route("/playlists", playlistsRouter);
 app.route("/movies", moviesRouter);
 app.route("/admin", adminRouter);
 // app.route("/cast", castRouter);
@@ -30,6 +30,6 @@ app.notFound((c) => c.text("Not Found", 404));
 // });
 // export default app;
 export default {
-	port: PORT,
-	fetch: app.fetch,
+  port: PORT,
+  fetch: app.fetch,
 };
