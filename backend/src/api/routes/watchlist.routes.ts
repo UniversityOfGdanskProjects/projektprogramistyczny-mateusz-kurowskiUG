@@ -3,7 +3,7 @@ import INewUser from "../../interfaces/user/INewUser";
 import { Hono } from "hono";
 import { addToWatchlistValidator } from "../middleware/validators/watchlist-validators";
 import Watchlist from "../../db/watchlists/watchlist";
-import idParamValidator, {
+import {
 	movieIdParamValidator,
 	userIdParamValidator,
 } from "../middleware/validators/id-param-validator";
@@ -36,7 +36,7 @@ watchlistRouter.delete(
 	async (c) => {
 		const { userId, movieId } = c.req.valid("param");
 
-		const watchlistResult = await db.deleteFromWatchlist(userId, movieId);
+		const watchlistResult = await Watchlist.deleteFromWatchlist(userId, movieId);
 		if (!watchlistResult.result) return c.json(watchlistResult, 400);
 
 		return c.json(watchlistResult, 200);

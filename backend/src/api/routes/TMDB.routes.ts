@@ -3,9 +3,6 @@ import db from "../../db/connect";
 
 const TMDBRouter = Router();
 
-TMDBRouter.get("/", async (request: Request, res: Response) => {
-	res.send("Hello World!");
-});
 TMDBRouter.get("/popular", async (request: Request, res: Response) => {
 	const popular = await db.getTmdbMPopular();
 	if (!popular.result) {
