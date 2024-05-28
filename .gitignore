@@ -1,0 +1,7 @@
+node_modules
+.env
+movie_ids*
+links.md
+file.txt
+data/
+bash
