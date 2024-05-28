@@ -58,8 +58,6 @@ jobs:
       - name: Snyk Code test
         run: snyk code test --sarif > snyk-code.sarif  || true
 
-      - name: Cat sarif
-        run: cat snyk-code.sarif
         # Runs Snyk Open Source (SCA) analysis and uploads result to Snyk.
       # - name: Snyk Open Source monitor
       #   run: snyk monitor --all-projects
