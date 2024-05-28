@@ -67,6 +67,8 @@ jobs:
       # - name: Snyk IaC test and report
       #   run: snyk iac test --report # || true
 
+      - name: Check dir structure
+        run: ls
         # Build the docker image for testing
       # - name: Build a Docker image
       #   run: docker build -t your/image-to-test .
