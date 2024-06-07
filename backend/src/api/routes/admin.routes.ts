@@ -81,18 +81,7 @@ adminRouter.patch("/movies/:id", updateMovieBodyValidator(), async (c) => {
 		status: status || null,
 		TMDBId: TMDBId || null,
 		overview: overview || null,
-	};
-	const movieValues = _.values(updatedMovie).slice(1);
-	if (movieValues.every((value) => !value))
-		return c.json(
-			{ result: false, msg: "Please add some fields to replace" },
-			400,
-		);
-
-	const updated = await MoviesDB.updateMovie(updatedMovie);
-	if (!updated.result) return c.json(updated, 400);
-
-	return c.json(updated, 200);
+	}return c.json(updated, 200);
 });
 adminRouter.delete("/movies/:id", deleteMovieParamsValidator(), async (c) => {
 	const { id } = c.req.valid("param");
