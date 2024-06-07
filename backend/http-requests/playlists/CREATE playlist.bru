@@ -1,0 +1,18 @@
+meta {
+  name: CREATE playlist
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:5000/api/playlists
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "P1aasd",
+    "userId": "prhvjxe99j7s1jfnsqdaw88b"
+  }
+}

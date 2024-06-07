@@ -3,6 +3,7 @@ import type IMovie from "./movie/IMovie";
 import type IPlaylist from "./IPlaylist";
 import type { IReview } from "./review/IReview";
 import type IUser from "./user/IUser";
+import IUser from "./user/IUser";
 
 export interface IDBResponse {
 	result: boolean;
@@ -19,6 +20,15 @@ export interface ILoginResponse {
 		| EDBMessage.INVALID_CREDIENTIALS;
 	data: IUser | undefined;
 	token?: Record<string, unknown> | undefined;
+}
+export interface IUserDeletionResponse {
+	result: boolean;
+	msg:
+		| EDBMessage.USER_DELETED
+		| EDBMessage.USER_NOT_DELETED
+		| EDBMessage.USER_NOT_FOUND;
+	// todo: replace with omit?
+	data: { id: string; email: string } | undefined;
 }
 
 export interface IUserCreationResponse {

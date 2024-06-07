@@ -1,9 +1,10 @@
 import { validator } from "hono/validator";
 import { z } from "zod";
+import idValidator from "./id-param-validator";
 const newMovieSchema = z.object(
 	{
 		title: z.string(),
-		release_date: z.string().date().optional().nullable(),
+		release_date: z.string().optional().nullable(),
 		poster_path: z.string().optional().nullable(),
 		backdrop_path: z.string().optional().nullable(),
 		popularity: z.number().optional().nullable(),
@@ -11,7 +12,7 @@ const newMovieSchema = z.object(
 		budget: z.number().optional().nullable(),
 		status: z.string().optional().nullable(),
 		TMDBId: z.number().optional().nullable(),
-		genres: z.array(z.string()),
+		genres: z.array(z.string()).optional().nullable(),
 		overview: z.string().optional().nullable(),
 	},
 	{ message: "Invalid movie data" },
@@ -20,7 +21,7 @@ const newMovieSchema = z.object(
 const updateMovieSchema = z.object(
 	{
 		title: z.string().optional().nullable(),
-		release_date: z.string().date().optional().nullable(),
+		release_date: z.string().optional().nullable(),
 		poster_path: z.string().optional().nullable(),
 		backdrop_path: z.string().optional().nullable(),
 		popularity: z.number().optional().nullable(),
@@ -33,30 +34,18 @@ const updateMovieSchema = z.object(
 	{ message: "Invalid movie data" },
 );
 
-const deleteMovieSchema = z.object(
-	{
-		id: z.string().cuid2("ID does not look like cuid2"),
-	},
-	{ message: "Invalid movie ID" },
-);
-
 export const addMovieBodyValidator = () =>
 	validator("json", (value, c) => {
 		const parsed = newMovieSchema.safeParse(value);
-		if (!parsed.success) return c.json({ message: parsed.error.message }, 400);
+		if (!parsed.success)
+			return c.json({ message: `Invalid body ${parsed.error}` }, 400);
 		return parsed.data;
 	});
 
 export const updateMovieBodyValidator = () =>
 	validator("json", (value, c) => {
 		const parsed = updateMovieSchema.safeParse(value);
-		if (!parsed.success) return c.json({ message: parsed.error.message }, 400);
-		return parsed.data;
-	});
-
-export const deleteMovieParamsValidator = () =>
-	validator("param", (value, c) => {
-		const parsed = deleteMovieSchema.safeParse(value);
-		if (!parsed.success) return c.json({ message: parsed.error.message }, 400);
+		if (!parsed.success)
+			return c.json({ message: `Invalid body ${parsed.error}` }, 400);
 		return parsed.data;
 	});

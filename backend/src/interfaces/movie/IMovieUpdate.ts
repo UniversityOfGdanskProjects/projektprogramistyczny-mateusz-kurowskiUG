@@ -1,4 +1,4 @@
-export interface IMovieUpdate {
+interface IMovieUpdate {
 	id: string | null;
 	title?: string | null;
 	overview?: string | null;
@@ -11,3 +11,5 @@ export interface IMovieUpdate {
 	status?: string | null;
 	TMDBId?: number | null;
 }
+
+export default IMovieUpdate;

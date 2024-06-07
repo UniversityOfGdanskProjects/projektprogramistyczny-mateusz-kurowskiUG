@@ -1,0 +1,17 @@
+meta {
+  name: Add null movie
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:5000/api/admin/movies
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "id": 1
+  }
+}

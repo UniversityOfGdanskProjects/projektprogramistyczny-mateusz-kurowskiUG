@@ -112,6 +112,22 @@ const createMovieWithGenres = async (
 	}
 };
 
+const getPaginatedMovies = async (
+	pageNumber = 1,
+	pageSize = 10,
+): Promise<IGetMoviesResponse> => {
+	const { records } = await driver.executeQuery(EMovieQueries.GET_MOVIE_PAGE, {
+		pageNumber,
+		pageSize,
+	});
+	const movies = records.map(
+		// biome-ignore lint/complexity/useLiteralKeys: <explanation>
+		(record) => record["toObject"]()["m"]["properties"],
+	);
+
+	return { result: true, data: movies, msg: EDBMessage.MOVIES_FOUND };
+};
+
 const createMovieWithoutGenres = async (
 	movie: IMovie,
 ): Promise<IMovieCreationResponse> => {
@@ -141,7 +157,7 @@ const createMovieWithoutGenres = async (
 const updateMovie = async (
 	movie: IMovieUpdate,
 ): Promise<IMovieUpdateResponse> => {
-	const { genres, ...movieParams } = movie;
+	const { ...movieParams } = movie;
 	if (!genres || genres.length === 0) return updateMovieWithoutGenres(movie);
 	return updateMovieWithGenres(movie);
 };
@@ -149,7 +165,7 @@ const updateMovie = async (
 const updateMovieWithoutGenres = async (
 	movie: IMovieUpdate,
 ): Promise<IMovieUpdateResponse> => {
-	const { genres, ...movieParams } = movie;
+	const { ...movieParams } = movie;
 	try {
 		const { records } = await driver.executeQuery(
 			EMovieQueries.UPDATE_MOVIE_WITHOUT_GENRES,
@@ -223,5 +239,6 @@ const MoviesDB = {
 	deleteMovie,
 	createMovie,
 	updateMovie,
+	getPaginatedMovies,
 };
 export default MoviesDB;

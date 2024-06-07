@@ -3,30 +3,29 @@ import { emailRegex, passwordRegex } from "../../data/regex";
 import db from "../../db/connect";
 import type INewUser from "../../interfaces/user/INewUser";
 import { query, body, validationResult, matchedData } from "express-validator";
-import { newEmailChain, newPasswordChain } from "../middleware/validators/adminValidators";
 import { createId } from "@paralleldrive/cuid2";
 import UsersDB from "../../db/users/users";
+import {
+	deleteUserValidator,
+	newUserValidator,
+} from "../middleware/validators/user-validators";
+import { Hono } from "hono";
 
-const usersRouter = Router();
+const usersRouter = new Hono();
 
 usersRouter.post(
 	"/register",
-	newEmailChain(),
-	newPasswordChain(),
 
-	async (request: Request, res: Response) => {
-		const validationErrors = validationResult(request);
-		if (!validationErrors.isEmpty())
-			return res.status(400).send({ msg: "Invalid input" });
+	newUserValidator(),
+
+	async (c) => {
 		const { email, password }: { email: string; password: string } =
-			matchedData(request);
+			c.req.valid("json");
 		// check if user exists
 		const userExists = await UsersDB.doesUserExist(email);
 
 		if (userExists)
-			return res
-				.status(400)
-				.send({ msg: "User already exists", result: false });
+			return c.json({ msg: "User already exists", result: false }, 400);
 
 		const id = createId();
 		const newUser: INewUser = {
@@ -37,11 +36,9 @@ usersRouter.post(
 		};
 		const registerResult = await UsersDB.createUser(newUser);
 		if (!registerResult.result || !registerResult.data)
-			return res.status(400).send(registerResult);
+			return c.json(registerResult, 200);
 
-		return res
-			.status(200)
-			.send({ msg: registerResult.msg, data: { id, email } });
+		return c.json({ msg: registerResult.msg, data: { id, email } }, 200);
 	},
 );
 
@@ -114,5 +111,11 @@ usersRouter.post(
 
 // 	return res.status(200).json(statsResult);
 // });
+
+usersRouter.delete("/:id", deleteUserValidator(), async (c) => {
+	const { id } = c.req.valid("param");
+	const deleteResult = await UsersDB.deleteUser(id);
+	return c.json(deleteResult, 200);
+});
 
 export default usersRouter;
