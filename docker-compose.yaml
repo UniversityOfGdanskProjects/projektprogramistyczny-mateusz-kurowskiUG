@@ -17,7 +17,9 @@ services:
 
   keycloak:
     restart: always
-    image: quay.io/keycloak/keycloak:24.0.4
+    build:
+      context: ./keycloak
+      dockerfile: keycloak-Dockerfile
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
@@ -29,14 +31,33 @@ services:
   backend:
     # restart: always
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ./backend
+      dockerfile: backend-Dockerfile
+    ports:
+      - "5000:5000"
     env_file:
       - ./backend/.env
-    # ports:
-    #   - "${BACKEND_PORT}:${BACKEND_PORT}"
     depends_on:
       - neo4j
-      - keycloak
+      # - keycloak
     working_dir: /backend
     
+  postgres:
+      image: postgres
+      restart: always
+      # set shared memory limit when using docker-compose
+      shm_size: 128mb
+      # or set shared memory limit when deploy via swarm stack
+      volumes:
+       - type: tmpfs
+         target: /dev/shm
+         tmpfs:
+           size: 134217728 # 128*2^20 bytes = 128Mb
+      environment:
+        POSTGRES_PASSWORD: example
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8081:8081

@@ -19,7 +19,7 @@ type TLoginContext = {
 };
 
 const loginContext = createContext<TLoginContext>({
-  loggedIn: false,
+  loggedIn: true,
   theme: "dark",
   wantToLogin: false,
   user: null,
