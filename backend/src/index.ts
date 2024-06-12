@@ -8,8 +8,12 @@ import usersRouter from "./api/routes/users.routes";
 import watchlistRouter from "./api/routes/watchlist.routes";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import KeycloakConnect from "keycloak-connect";
+
 const PORT = process.env.BACKEND_PORT || 3000;
 const app = new Hono({ strict: true }).basePath("/api");
+const keycloak = new KeycloakConnect({});
+app.use(keycloak.middleware());
 app.use(logger());
 app.use(cors());
 

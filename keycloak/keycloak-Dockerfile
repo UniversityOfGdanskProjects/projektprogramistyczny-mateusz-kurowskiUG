@@ -22,4 +22,4 @@ COPY --from=builder /opt/keycloak/ /opt/keycloak/
 COPY ./realm-export.json /opt/keycloak/data/import/realm.json
 
 ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
-CMD [ "start", "--optimized", "--import-realm" ]
+CMD [ "start-dev", "--optimized", "--import-realm" ]

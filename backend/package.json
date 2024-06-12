@@ -27,6 +27,7 @@
     "express": "^4.19.2",
     "express-validator": "^7.1.0",
     "hono": "^4.3.11",
+    "keycloak-connect": "^25.0.0",
     "lodash": "^4.17.21",
     "neo4j-driver": "^5.20.0",
     "zod": "^3.23.8"
