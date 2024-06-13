@@ -28,19 +28,19 @@ services:
     command:
       - "start-dev"
 
-  backend:
-    # restart: always
-    build:
-      context: ./backend
-      dockerfile: backend-Dockerfile
-    ports:
-      - "5000:5000"
-    env_file:
-      - ./backend/.env
-    depends_on:
-      - neo4j
-      # - keycloak
-    working_dir: /backend
+  # backend:
+  #   # restart: always
+  #   build:
+  #     context: ./backend
+  #     dockerfile: backend-Dockerfile
+  #   ports:
+  #     - "5000:5000"
+  #   env_file:
+  #     - ./backend/.env
+  #   depends_on:
+  #     - neo4j
+  #     # - keycloak
+  #   working_dir: /backend
     
   postgres:
       image: postgres

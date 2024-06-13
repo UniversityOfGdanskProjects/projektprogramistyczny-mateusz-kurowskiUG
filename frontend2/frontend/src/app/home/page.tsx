@@ -2,20 +2,16 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import React from "react";
+import HomeLayout from "./components/home-layout";
 
 const Page = () => {
 	const { data: session, status } = useSession();
 	const router = useRouter();
 	if (status === "loading") return <p>Loading...</p>;
+	// todo: remove this vvvv
+	// if (status === "unauthenticated") router.push("/");
 
-	if (status === "unauthenticated") router.push("/");
-
-	return (
-		<>
-			<h1>Protected Page</h1>
-			<p>You can view this page because you are signed in.</p>
-		</>
-	);
+	return <HomeLayout />;
 };
 
 export default Page;
